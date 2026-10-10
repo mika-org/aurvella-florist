@@ -1,26 +1,77 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-blush-50: #FFF5F7;
+    --color-blush-100: #FDE8ED;
+    --color-blush-200: #FBD0DA;
+    --color-blush-300: #F7A8BB;
+    --color-blush-400: #EE7796;
+    --color-blush-500: #DF4D73;
+    --color-blush-600: #C93059;
+
+    --color-gold-300: #F1D78B;
+    --color-gold-400: #E6C665;
+    --color-gold-500: #D4AF37;
+    --color-gold-600: #B89223;
+    --color-gold-700: #8E6D14;
+
+    --color-champagne: #FAF6F0;
+    --color-surface: #FFFFFF;
+    --color-text-main: #2D2527;
+    --color-text-muted: #6B5E63;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: #2D2527;
+  background-color: #FAF8F8;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+}
+
+/* Floating animation for decorative petals & butterflies */
+@keyframes softFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+@keyframes swaySlow {
+  0%, 100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.animate-soft-float {
+  animation: softFloat 6s ease-in-out infinite;
+}
+
+.animate-sway {
+  animation: swaySlow 8s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
 }
