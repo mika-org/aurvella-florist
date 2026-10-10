@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <div>
             <label className="block text-xs font-semibold text-[#4A3E42] mb-1">
               Username atau Email
@@ -82,7 +82,8 @@ export default function AdminLoginPage() {
                 required
                 value={usernameOrEmail}
                 onChange={(e) => setUsernameOrEmail(e.target.value)}
-                placeholder="admin / admin@aurvellaflorist.com"
+                placeholder="Masukkan username atau email"
+                autoComplete="off"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E8D9DC] text-sm focus:outline-none focus:border-[#B83253]"
               />
             </div>
@@ -101,7 +102,8 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Masukkan password"
+                autoComplete="new-password"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E8D9DC] text-sm focus:outline-none focus:border-[#B83253]"
               />
             </div>
@@ -122,10 +124,6 @@ export default function AdminLoginPage() {
             )}
           </button>
         </form>
-
-        <div className="mt-8 text-center text-xs text-[#8A7E82]">
-          <p>Kredensial Default: <strong className="text-[#2D2527]">admin</strong> / <strong className="text-[#2D2527]">admin123</strong></p>
-        </div>
       </div>
     </div>
   );

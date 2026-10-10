@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
+import ImageUploadField from '@/components/admin/ImageUploadField';
 
 interface Category {
   id: string;
@@ -590,20 +591,13 @@ export default function ProductManagementClient({
                 </label>
               </div>
 
-              {/* Image URL */}
-              <div>
-                <label className="block font-semibold text-[#4A3E42] mb-1">
-                  URL Gambar Produk
-                </label>
-                <input
-                  type="text"
-                  value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
-                  }
-                  className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
-                />
-              </div>
+              {/* Image Upload */}
+              <ImageUploadField
+                label="Foto Produk Standing Flower *"
+                value={formData.imageUrl}
+                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                hint="Gambar otomatis disimpan ke server /uploads dan dapat diakses via https://aurvella-florist.elevore.web.id/uploads/..."
+              />
 
               {/* Description */}
               <div>

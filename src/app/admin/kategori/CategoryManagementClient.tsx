@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit2, Trash2, X, Loader2, FolderTree } from 'lucide-react';
+import ImageUploadField from '@/components/admin/ImageUploadField';
 
 interface Category {
   id: string;
@@ -302,20 +303,12 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-semibold text-[#4A3E42] mb-1">
-                  Path File Gambar PNG Kategori
-                </label>
-                <input
-                  type="text"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                  placeholder="/images/categories/standing-acrylic.png"
-                  className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] focus:outline-none focus:border-[#B83253]"
-                />
-              </div>
+              <ImageUploadField
+                label="Foto / Thumbnail Kategori"
+                value={formData.image}
+                onChange={(url) => setFormData({ ...formData, image: url })}
+                hint="Gambar kategori otomatis diunggah ke /uploads."
+              />
 
               <div>
                 <label className="block font-semibold text-[#4A3E42] mb-1">

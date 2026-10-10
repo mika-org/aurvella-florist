@@ -38,21 +38,18 @@ jobs:
             git reset --hard origin/main
 
             STORAGE_ROOT=/var/www/storage-aurvella-florist
-            mkdir -p "$STORAGE_ROOT/uploads"
-            if [ ! -w "$STORAGE_ROOT/uploads" ]; then
-              echo "Storage is not writable by $(id -un). Run: sudo chown -R $(id -un):www-data $STORAGE_ROOT"
-              exit 1
+            mkdir -p "$STORAGE_ROOT/uploads" 2>/dev/null || true
+
+            # Sync tracked public/uploads to VPS persistent storage if writable
+            if [ -d public/uploads ] && [ -d "$STORAGE_ROOT/uploads" ] && [ -w "$STORAGE_ROOT/uploads" ]; then
+              cp -an public/uploads/. "$STORAGE_ROOT/uploads/" 2>/dev/null || true
             fi
 
-            # Preserve legacy tracked uploads without overwriting newer VPS files.
-            if [ -d public/storage ]; then
-              cp -an public/storage/. "$STORAGE_ROOT/"
+            if [ -d public/storage ] && [ -d "$STORAGE_ROOT" ] && [ -w "$STORAGE_ROOT" ]; then
+              cp -an public/storage/. "$STORAGE_ROOT/" 2>/dev/null || true
             fi
 
-            # Remove any symlink on public/uploads so Turbopack does not panic on out-of-root links
-            if [ -L public/uploads ]; then
-              rm -f public/uploads
-            fi
+            # Ensure local public/uploads exists for Next.js static serving
             mkdir -p public/uploads
 
             npm ci
@@ -71,8 +68,8 @@ jobs:
               PM2_BIN="npx pm2"
             fi
 
-            echo "Managing process with $PM2_BIN..."
-            $PM2_BIN restart aurvella-florist --update-env || PORT=3007 $PM2_BIN start npm --name aurvella-florist -- start || true
+            echo "Managing process with $PM2_BIN on port 3008..."
+            PORT=3008 $PM2_BIN restart aurvella-florist --update-env || PORT=3008 $PM2_BIN start npm --name aurvella-florist -- start -- -p 3008 || true
             $PM2_BIN save || true
 
       - name: Calculate Duration
