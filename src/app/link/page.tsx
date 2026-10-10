@@ -3,6 +3,8 @@ import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import LinkTreeClient from './LinkTreeClient';
 
+export const dynamic = 'force-dynamic';
+
 
 export const metadata: Metadata = {
   title: 'Aurvella Florist - Official Links & Pricelist',

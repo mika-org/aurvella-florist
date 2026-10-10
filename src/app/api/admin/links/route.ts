@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
 import { socialLinkSchema } from '@/lib/validations';
@@ -36,6 +37,31 @@ export async function POST(req: NextRequest) {
     const created = await prisma.socialLink.create({
       data: parseResult.data,
     });
+
+    if (created.type === 'INSTAGRAM') {
+      await prisma.siteSetting.upsert({
+        where: { key: 'instagram_url' },
+        update: { value: created.url },
+        create: { key: 'instagram_url', value: created.url },
+      });
+    } else if (created.type === 'SHOPEE') {
+      await prisma.siteSetting.upsert({
+        where: { key: 'shopee_url' },
+        update: { value: created.url },
+        create: { key: 'shopee_url', value: created.url },
+      });
+    } else if (created.type === 'TIKTOK') {
+      await prisma.siteSetting.upsert({
+        where: { key: 'tiktok_url' },
+        update: { value: created.url },
+        create: { key: 'tiktok_url', value: created.url },
+      });
+    }
+
+    revalidatePath('/', 'layout');
+    revalidatePath('/link');
+    revalidatePath('/admin/pengaturan');
+    revalidatePath('/admin/link');
 
     return NextResponse.json({ success: true, link: created });
   } catch (error: any) {

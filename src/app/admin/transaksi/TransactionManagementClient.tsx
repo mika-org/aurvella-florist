@@ -23,6 +23,7 @@ import {
   Sparkles,
   ArrowRight,
   Trash2,
+  Edit2,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 
@@ -84,6 +85,8 @@ export default function TransactionManagementClient({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<TransactionData | null>(null);
+  const [editingTxId, setEditingTxId] = useState<string | null>(null);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
   // Form State
   const [customerName, setCustomerName] = useState('');
@@ -231,6 +234,7 @@ export default function TransactionManagementClient({
   const formGrandTotal = items.reduce((acc, it) => acc + it.subtotal, 0);
 
   const openCreateModal = () => {
+    setEditingTxId(null);
     setCustomerName('');
     setCustomerPhone('');
     setCustomerAddress('');
@@ -248,6 +252,74 @@ export default function TransactionManagementClient({
     setSkuSearchError(null);
     setErrorMsg(null);
     setIsCreateModalOpen(true);
+  };
+
+  const openEditModal = (tx: TransactionData) => {
+    setEditingTxId(tx.id);
+    setCustomerName(tx.customerName);
+    setCustomerPhone(tx.customerPhone);
+    setCustomerAddress(tx.customerAddress || '');
+    setBoardGreeting(tx.boardGreeting || '');
+    setSenderName(tx.senderName || '');
+    setPaymentMethod(tx.paymentMethod);
+    setPaymentStatus(tx.paymentStatus);
+    setOrderStatus(tx.orderStatus);
+    setNotes(tx.notes || '');
+    setCustomDate(
+      tx.transactionDate
+        ? new Date(tx.transactionDate).toISOString().slice(0, 16)
+        : new Date().toISOString().slice(0, 16)
+    );
+    setItems(
+      tx.items.map((it) => ({
+        productId: it.productId || '',
+        productSku: it.productSku,
+        productName: it.productName,
+        price: it.price,
+        quantity: it.quantity,
+        subtotal: it.subtotal,
+        imageUrl: it.product?.images?.[0]?.url || '/images/categories/standing-acrylic.png',
+      }))
+    );
+    setSkuInput('');
+    setSearchProductQuery('');
+    setSearchResults([]);
+    setSkuSearchError(null);
+    setErrorMsg(null);
+    setIsDetailModalOpen(false);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleDeleteTransaction = async (tx: TransactionData) => {
+    if (
+      !confirm(
+        `Yakin ingin menghapus transaksi ${tx.invoiceNumber} (${tx.customerName})?\n\nJumlah total penjualan produk terkait akan disesuaikan otomatis.`
+      )
+    ) {
+      return;
+    }
+
+    setIsDeletingId(tx.id);
+    try {
+      const res = await fetch(`/api/admin/transactions/${tx.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal menghapus transaksi');
+      }
+
+      setTransactions((prev) => prev.filter((t) => t.id !== tx.id));
+      if (selectedTx?.id === tx.id) {
+        setIsDetailModalOpen(false);
+        setSelectedTx(null);
+      }
+      router.refresh();
+    } catch (err: any) {
+      alert(err.message || 'Gagal menghapus transaksi');
+    } finally {
+      setIsDeletingId(null);
+    }
   };
 
   const handleSaveTransaction = async (e: React.FormEvent) => {
@@ -275,8 +347,13 @@ export default function TransactionManagementClient({
         items,
       };
 
-      const res = await fetch('/api/admin/transactions', {
-        method: 'POST',
+      const url = editingTxId
+        ? `/api/admin/transactions/${editingTxId}`
+        : '/api/admin/transactions';
+      const method = editingTxId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
@@ -287,6 +364,7 @@ export default function TransactionManagementClient({
       }
 
       setIsCreateModalOpen(false);
+      setEditingTxId(null);
       router.refresh();
       window.location.reload();
     } catch (err: any) {
@@ -581,17 +659,43 @@ export default function TransactionManagementClient({
 
                     {/* Actions */}
                     <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTx(tx);
-                          setIsDetailModalOpen(true);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#B83253] bg-[#FAF3F5] hover:bg-[#FDE2E8] transition-colors"
-                      >
-                        <Receipt className="w-3.5 h-3.5" />
-                        <span>Detail Nota</span>
-                      </button>
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTx(tx);
+                            setIsDetailModalOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#B83253] bg-[#FAF3F5] hover:bg-[#FDE2E8] transition-colors"
+                          title="Lihat Nota & Rincian Transaksi"
+                        >
+                          <Receipt className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Nota</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(tx)}
+                          className="p-1.5 rounded-lg border border-[#E8D9DC] text-[#4A3E42] hover:bg-[#FFF5F7] hover:text-[#B83253] transition-colors"
+                          title="Edit Transaksi"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTransaction(tx)}
+                          disabled={isDeletingId === tx.id}
+                          className="p-1.5 rounded-lg border border-[#E8D9DC] text-[#EF4444] hover:bg-[#FEE2E2] disabled:opacity-50 transition-colors"
+                          title="Hapus Transaksi"
+                        >
+                          {isDeletingId === tx.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -608,10 +712,12 @@ export default function TransactionManagementClient({
             <div className="flex items-center justify-between pb-4 border-b border-[#F5E6EA] mb-6">
               <div>
                 <h2 className="font-serif text-xl font-bold text-[#2D2527]">
-                  Input Transaksi Penjualan Baru
+                  {editingTxId ? 'Edit Data Transaksi Penjualan' : 'Input Transaksi Penjualan Baru'}
                 </h2>
                 <span className="text-xs text-[#7A6D72]">
-                  Pilih produk via pencarian atau masukkan SKU produk secara instan.
+                  {editingTxId
+                    ? 'Perbarui rincian pembeli, item produk, atau status pembayaran dan pesanan.'
+                    : 'Pilih produk via pencarian atau masukkan SKU produk secara instan.'}
                 </span>
               </div>
               <button
@@ -953,7 +1059,7 @@ export default function TransactionManagementClient({
                   className="px-6 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-[#B83253] to-[#DF4D73] hover:opacity-95 shadow-md shadow-[#B83253]/25 disabled:opacity-50 flex items-center gap-2"
                 >
                   {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  <span>Simpan Transaksi</span>
+                  <span>{editingTxId ? 'Simpan Perubahan' : 'Simpan Transaksi'}</span>
                 </button>
               </div>
             </form>
@@ -1052,7 +1158,31 @@ export default function TransactionManagementClient({
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex flex-wrap justify-between items-center gap-2 pt-4 border-t border-[#F5E6EA]">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEditModal(selectedTx)}
+                  className="px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-[#4A3E42] hover:bg-[#FFF5F7] hover:text-[#B83253] font-semibold text-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-[#B83253]" />
+                  <span>Edit Transaksi</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteTransaction(selectedTx)}
+                  disabled={isDeletingId === selectedTx.id}
+                  className="px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-[#EF4444] hover:bg-[#FEE2E2] font-semibold text-xs flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+                >
+                  {isDeletingId === selectedTx.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3.5 h-3.5" />
+                  )}
+                  <span>Hapus Transaksi</span>
+                </button>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setIsDetailModalOpen(false)}
