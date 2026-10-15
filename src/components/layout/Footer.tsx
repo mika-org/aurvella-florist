@@ -45,7 +45,7 @@ export default function Footer({
               </span>
             </div>
             <p className="text-sm text-white/70 leading-relaxed">
-              Spesialis Standing Flower Bandung berkelas premium. Menghadirkan rangkaian bunga akrilik, standing cermin, papan VPC, dan bunga segar pilihan dengan gratis ongkir untuk area Bandung.
+              Spesialis Standing Flower Bandung berkelas premium. Menghadirkan rangkaian bunga akrilik, standing cermin, papan PVC, dan bunga segar pilihan dengan gratis ongkir untuk area Bandung.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
@@ -140,8 +140,8 @@ export default function Footer({
                 </Link>
               </li>
               <li>
-                <Link href="/kategori/standing-vpc" className="hover:text-[#F8B4C4] transition-colors">
-                  Standing VPC Grand Opening
+                <Link href="/kategori/standing-pvc" className="hover:text-[#F8B4C4] transition-colors">
+                  Standing PVC Grand Opening
                 </Link>
               </li>
               <li>

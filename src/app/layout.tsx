@@ -17,7 +17,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: 'Aurvella Florist - Spesialis Standing Flower Bandung | Fresh & Artificial',
   description:
-    'Pusat standing flower nomor satu di Bandung untuk grand opening, wedding, anniversary, dan duka cita. Tersedia akrilik, cermin, VPC, dan bunga segar. Free ongkir Bandung & Same Day Delivery.',
+    'Pusat standing flower nomor satu di Bandung untuk grand opening, wedding, anniversary, dan duka cita. Tersedia akrilik, cermin, PVC, dan bunga segar. Free ongkir Bandung & Same Day Delivery.',
   keywords: [
     'standing flower bandung',
     'florist bandung',
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'Aurvella Florist' }],
   openGraph: {
     title: 'Aurvella Florist Bandung - Standing Flower Elegan & Mewah',
-    description: 'Spesialis standing flower akrilik, cermin, VPC & fresh flower di Bandung. Free Ongkir & Same Day Delivery.',
+    description: 'Spesialis standing flower akrilik, cermin, PVC & fresh flower di Bandung. Free Ongkir & Same Day Delivery.',
     type: 'website',
     locale: 'id_ID',
     siteName: 'Aurvella Florist Bandung',
@@ -48,12 +48,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={`${jakarta.variable} ${playfair.variable}`}>
+    <html lang="id" className={`${jakarta.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logo.png" type="image/png" sizes="any" />
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
-      <body className="min-h-screen flex flex-col font-sans antialiased text-[#2D2527] bg-[#FAF8F8]">
+      <body
+        suppressHydrationWarning
+        className="min-h-screen flex flex-col font-sans antialiased text-[#2D2527] bg-[#FAF8F8]"
+      >
         {children}
       </body>
     </html>

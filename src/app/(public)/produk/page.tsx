@@ -9,7 +9,7 @@ import { Sparkles, SlidersHorizontal } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Katalog Standing Flower Bandung - Aurvella Florist',
   description:
-    'Lihat koleksi lengkap standing flower di Bandung: Standing Acrylic, Standing Cermin, Standing VPC, Bunga Segar, dan Standing Duka Cita. Free ongkir & pemesanan cepat.',
+    'Lihat koleksi lengkap standing flower di Bandung: Standing Acrylic, Standing Cermin, Standing PVC, Bunga Segar, dan Standing Duka Cita. Free ongkir & pemesanan cepat.',
 };
 
 interface ProductsPageProps {

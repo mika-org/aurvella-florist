@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Receipt,
   HelpCircle,
+  Users,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -59,6 +60,7 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
       category: 'Penjualan & Transaksi',
       items: [
         { label: 'Transaksi Penjualan', href: '/admin/transaksi', icon: Receipt },
+        { label: 'Data Pelanggan', href: '/admin/pelanggan', icon: Users },
       ],
     },
     {

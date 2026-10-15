@@ -36,8 +36,8 @@ export default function Navbar({
               <span className="font-serif text-2xl font-bold tracking-tight text-[#2D2527] group-hover:text-[#B83253] transition-colors block leading-tight">
                 {businessName}
               </span>
-              <span className="block text-[11px] uppercase tracking-widest text-[#B89223] font-semibold">
-                Bandung Standing Flower
+              <span className="block text-[10px] sm:text-[11px] uppercase tracking-wider text-[#B89223] font-semibold">
+                STANDING FLOWER NO. 1 DI BANDUNG
               </span>
             </div>
           </Link>

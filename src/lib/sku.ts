@@ -3,7 +3,8 @@ import { prisma } from './prisma';
 const CATEGORY_PREFIX_MAP: Record<string, string> = {
   'standing-acrylic': 'ACR',
   'standing-cermin': 'CRM',
-  'standing-vpc': 'VPC',
+  'standing-pvc': 'PVC',
+  'standing-vpc': 'PVC',
   'standing-fresh': 'FRE',
   'standing-duka-cita': 'DUK',
 };

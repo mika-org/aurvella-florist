@@ -1,44 +1,115 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Phone, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Phone, ArrowRight, Sparkles, CheckCircle2, ChevronLeft, ChevronRight, Tag, Eye } from 'lucide-react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import PromoCountdown from '@/components/ui/PromoCountdown';
+import { formatRupiah } from '@/lib/utils';
+
+export interface HeroProductItem {
+  id?: string;
+  name: string;
+  slug?: string;
+  sku: string;
+  normalPrice: number;
+  promoPrice?: number | null;
+  isPromo: boolean;
+  promoEnd?: Date | string | null;
+  imageUrl?: string | null;
+  categoryName?: string;
+  description?: string | null;
+}
 
 interface HeroBannerProps {
   whatsappNumber?: string;
+  heroProducts?: HeroProductItem[];
   promoProduct?: {
     name: string;
     normalPrice: number;
     promoPrice: number;
     sku: string;
     promoEnd?: Date | string | null;
+    imageUrl?: string | null;
+    slug?: string;
   };
 }
 
 export default function HeroBanner({
   whatsappNumber = '6285770187018',
+  heroProducts = [],
   promoProduct,
 }: HeroBannerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const ornamentRef = useRef<HTMLDivElement>(null);
   const cardPromoRef = useRef<HTMLDivElement>(null);
+  const slideCardRef = useRef<HTMLDivElement>(null);
 
-  // Auto-hide when promo expires
-  const [isPromoExpired, setIsPromoExpired] = useState(() => {
-    if (!promoProduct?.promoEnd) return false;
-    return new Date(promoProduct.promoEnd).getTime() <= Date.now();
-  });
+  // Normalize products list: combine heroProducts or fallback to promoProduct
+  const productsList: HeroProductItem[] = React.useMemo(() => {
+    if (heroProducts && heroProducts.length > 0) {
+      return heroProducts;
+    }
+    if (promoProduct) {
+      return [
+        {
+          name: promoProduct.name,
+          normalPrice: promoProduct.normalPrice,
+          promoPrice: promoProduct.promoPrice,
+          sku: promoProduct.sku,
+          isPromo: true,
+          promoEnd: promoProduct.promoEnd,
+          imageUrl: promoProduct.imageUrl || '/images/categories/standing-acrylic.png',
+          slug: promoProduct.slug || 'promo-standing-flower',
+        },
+      ];
+    }
+    return [];
+  }, [heroProducts, promoProduct]);
 
-  const showPromo = promoProduct && !isPromoExpired;
+  // Current Slide Index
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const activeProduct = productsList[currentIndex] || null;
+
+  // Auto-play slider every 5 seconds (pauses when user hovers)
+  useEffect(() => {
+    if (productsList.length <= 1 || isPaused) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % productsList.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [productsList.length, isPaused]);
+
+  // Animate slide change
+  useEffect(() => {
+    if (slideCardRef.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.fromTo(
+        slideCardRef.current,
+        { opacity: 0.4, scale: 0.98 },
+        { opacity: 1, scale: 1, duration: 0.45, ease: 'power2.out' }
+      );
+    }
+  }, [currentIndex]);
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev === 0 ? productsList.length - 1 : prev - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % productsList.length);
+  };
 
   useGSAP(
     () => {
-      // Respect prefers-reduced-motion
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         return;
       }
@@ -58,95 +129,59 @@ export default function HeroBanner({
           {
             scale: 0.9,
             opacity: 0,
+            y: 20,
             duration: 0.8,
-            ease: 'back.out(1.5)',
+            ease: 'back.out(1.7)',
           },
           '-=0.4'
         );
       }
 
-      // GSAP Moving Flower Ornaments across all sides
+      // Moving Flower Ornaments on All 4 Corners
       if (ornamentRef.current) {
-        const tlCorner = ornamentRef.current.querySelector('.ornament-top-left');
-        if (tlCorner) {
-          gsap.to(tlCorner, {
-            y: -14,
-            x: 10,
-            rotation: 6,
-            duration: 5,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut',
-          });
-        }
+        gsap.to('.ornament-top-left', {
+          y: -14,
+          x: 10,
+          rotation: 8,
+          duration: 4.5,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+        });
 
-        const trCorner = ornamentRef.current.querySelector('.ornament-top-right');
-        if (trCorner) {
-          gsap.to(trCorner, {
-            y: 12,
-            x: -12,
-            rotation: -8,
-            duration: 6,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut',
-          });
-        }
+        gsap.to('.ornament-top-right', {
+          y: 14,
+          x: -12,
+          rotation: -8,
+          duration: 5,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+        });
 
-        const blCorner = ornamentRef.current.querySelector('.ornament-bottom-left');
-        if (blCorner) {
-          gsap.to(blCorner, {
-            y: -15,
-            x: 8,
-            rotation: 7,
-            duration: 5.5,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut',
-          });
-        }
+        gsap.to('.ornament-bottom-left', {
+          y: 16,
+          x: 12,
+          rotation: -10,
+          duration: 4.8,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+        });
 
-        const brCorner = ornamentRef.current.querySelector('.ornament-bottom-right');
-        if (brCorner) {
-          gsap.to(brCorner, {
-            y: 16,
-            x: -10,
-            rotation: -6,
-            duration: 6.5,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut',
-          });
-        }
+        gsap.to('.ornament-bottom-right', {
+          y: -16,
+          x: -10,
+          rotation: 10,
+          duration: 5.2,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+        });
 
-        const mlPetal = ornamentRef.current.querySelector('.ornament-mid-left');
-        if (mlPetal) {
-          gsap.to(mlPetal, {
-            y: -20,
-            x: 15,
-            rotation: 12,
-            duration: 4.8,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut',
-          });
-        }
-
-        const mrPetal = ornamentRef.current.querySelector('.ornament-mid-right');
-        if (mrPetal) {
-          gsap.to(mrPetal, {
-            y: 18,
-            x: -14,
-            rotation: -14,
-            duration: 5.2,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut',
-          });
-        }
-
-        const miniPetals = ornamentRef.current.querySelectorAll('.ornament-mini-petal');
-        miniPetals.forEach((p, idx) => {
+        // Floating ambient floral dust particles
+        const particles = ornamentRef.current.querySelectorAll('.hero-dust');
+        particles.forEach((p, idx) => {
           gsap.to(p, {
             y: idx % 2 === 0 ? -18 : 16,
             x: idx % 2 === 0 ? 12 : -10,
@@ -258,118 +293,64 @@ export default function HeroBanner({
             <circle cx="110" cy="95" r="19" fill="#E56A88" fillOpacity="0.8" />
             <circle cx="106" cy="112" r="11" fill="#DFB758" />
             <path d="M135 95 C150 80 140 70 125 85 Z" fill="#DFB758" fillOpacity="0.9" />
-            <path d="M85 140 C70 155 60 140 75 130 Z" fill="#F8B4C4" fillOpacity="0.8" />
+            <path d="M85 140 C70 155 60 140 75 130 Z" fill="#F8B4C4" fillOpacity="0.85" />
           </svg>
         </div>
 
-        {/* MIDDLE-LEFT FLOATING ORNAMENT */}
-        <div className="ornament-mid-left hidden sm:block absolute top-1/2 left-2 -translate-y-1/2 w-16 h-16 opacity-75">
-          <svg viewBox="0 0 80 80" fill="none" className="w-full h-full">
-            <path
-              d="M40 10 C60 25 60 55 40 70 C20 55 20 25 40 10 Z"
-              fill="#F8B4C4"
-              fillOpacity="0.7"
-            />
-            <circle cx="40" cy="40" r="8" fill="#DFB758" />
-          </svg>
-        </div>
-
-        {/* MIDDLE-RIGHT FLOATING ORNAMENT */}
-        <div className="ornament-mid-right hidden sm:block absolute top-1/2 right-2 -translate-y-1/2 w-16 h-16 opacity-75">
-          <svg viewBox="0 0 80 80" fill="none" className="w-full h-full">
-            <path
-              d="M40 10 C60 25 60 55 40 70 C20 55 20 25 40 10 Z"
-              fill="#DFB758"
-              fillOpacity="0.75"
-            />
-            <circle cx="40" cy="40" r="8" fill="#FDE2E8" />
-          </svg>
-        </div>
-
-        {/* FLOATING DRIFTING PETALS */}
-        <div className="ornament-mini-petal absolute top-1/4 left-[20%] w-7 h-7 opacity-70">
-          <svg viewBox="0 0 40 40" fill="none" className="w-full h-full text-[#F8B4C4]">
-            <path d="M20 0 C32 12 32 28 20 40 C8 28 8 12 20 0 Z" fill="currentColor" fillOpacity="0.6" />
-          </svg>
-        </div>
-        <div className="ornament-mini-petal absolute top-1/3 right-[18%] w-8 h-8 opacity-65">
-          <svg viewBox="0 0 40 40" fill="none" className="w-full h-full text-[#DFB758]">
-            <path d="M20 0 C32 12 32 28 20 40 C8 28 8 12 20 0 Z" fill="currentColor" fillOpacity="0.7" />
-          </svg>
-        </div>
-        <div className="ornament-mini-petal absolute bottom-1/4 left-[25%] w-6 h-6 opacity-60">
-          <svg viewBox="0 0 40 40" fill="none" className="w-full h-full text-[#E56A88]">
-            <path d="M20 0 C32 12 32 28 20 40 C8 28 8 12 20 0 Z" fill="currentColor" fillOpacity="0.55" />
-          </svg>
-        </div>
-        <div className="ornament-mini-petal absolute bottom-1/3 right-[22%] w-7 h-7 opacity-70">
-          <svg viewBox="0 0 40 40" fill="none" className="w-full h-full text-[#FDE2E8]">
-            <path d="M20 0 C32 12 32 28 20 40 C8 28 8 12 20 0 Z" fill="currentColor" fillOpacity="0.75" />
-          </svg>
-        </div>
+        {/* Floating golden dust particles */}
+        <div className="hero-dust absolute top-1/4 left-1/4 w-3.5 h-3.5 rounded-full bg-[#DFB758]/50 blur-xs" />
+        <div className="hero-dust absolute top-1/3 right-1/4 w-4 h-4 rounded-full bg-[#F8B4C4]/50 blur-xs" />
+        <div className="hero-dust absolute bottom-1/3 left-1/3 w-3 h-3 rounded-full bg-[#DFB758]/40 blur-xs" />
       </div>
 
-      {/* 3. Hero Content on Top of Full Screen Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 relative z-30 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* 3. Hero Content */}
+      <div className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           {/* Left Text Content */}
           <div
             ref={textRef}
-            className={`space-y-6 text-white ${
-              showPromo ? 'lg:col-span-8' : 'lg:col-span-10 lg:mx-auto text-center'
-            }`}
+            className={`space-y-6 ${productsList.length > 0 ? 'lg:col-span-8' : 'lg:col-span-12 text-center max-w-3xl mx-auto'}`}
           >
-            <div className="gsap-fade-in inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[#FDE2E8] text-xs font-semibold tracking-wide shadow-lg">
-              <Sparkles className="w-4 h-4 text-[#DFB758]" />
-              <span>Florist Pilihan Terpercaya di Bandung & Cimahi</span>
+            {/* Tagline Badge */}
+            <div className={`gsap-fade-in inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#FDE2E8] text-xs uppercase tracking-widest font-semibold shadow-lg ${productsList.length > 0 ? '' : 'mx-auto'}`}>
+              <Sparkles className="w-3.5 h-3.5 text-[#DFB758] animate-pulse" />
+              <span>STANDING FLOWER NO. 1 DI BANDUNG</span>
             </div>
 
-            <h1 className="gsap-fade-in font-serif text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.12] drop-shadow-md">
-              Spesialist Standing Flower{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F8B4C4] via-[#FDE2E8] to-[#DFB758]">
-                BANDUNG
-              </span>
+            {/* Main Headline */}
+            <h1 className="gsap-fade-in font-serif text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-md">
+              Spesialis Standing Flower{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F8B4C4] via-[#FDE8ED] to-[#DFB758]">
+                Mewah &amp; Elegan
+              </span>{' '}
+              di Bandung
             </h1>
 
-            <p className="gsap-fade-in text-xl sm:text-2xl font-semibold text-[#DFB758] tracking-wide drop-shadow">
-              Fresh & Artificial | Free Ongkir
+            {/* Description */}
+            <p className="gsap-fade-in text-sm sm:text-lg text-white/90 leading-relaxed font-light drop-shadow max-w-2xl">
+              Rangkaian standing flower berkelas untuk perayaan akbar, grand opening toko, resepsi pernikahan, anniversary, ucapan selamat &amp; sukses, hingga ungkapan belasungkawa khidmat. Dibuat rapi oleh florist berpengalaman dengan garansi bunga sampai segar dan tepat waktu.
             </p>
 
-            <p className={`gsap-fade-in text-sm sm:text-base text-white/90 leading-relaxed drop-shadow ${showPromo ? 'max-w-2xl' : 'max-w-3xl mx-auto'}`}>
-              Rangkaian standing flower berkelas untuk perayaan akbar, grand opening toko, resepsi pernikahan, anniversary, ucapan selamat & sukses, hingga ungkapan belasungkawa khidmat. Dibuat rapi oleh florist berpengalaman dengan garansi bunga sampai segar dan tepat waktu.
-            </p>
-
-            {/* Countdown Banner in Hero (Auto-hidden if no promo or expired) */}
-            {showPromo && promoProduct.promoEnd && (
-              <div className="gsap-fade-in pt-1 pb-1">
-                <PromoCountdown
-                  targetDate={promoProduct.promoEnd}
-                  variant="banner"
-                  onExpire={() => setIsPromoExpired(true)}
-                />
-              </div>
-            )}
-
-            {/* Benefit badges */}
-            <div className={`gsap-fade-in flex flex-wrap gap-y-2.5 gap-x-5 text-xs sm:text-sm font-semibold text-white/95 pt-1 ${showPromo ? '' : 'justify-center'}`}>
+            {/* Service Highlights Pills */}
+            <div className={`gsap-fade-in flex flex-wrap gap-2.5 sm:gap-3 text-xs text-white/90 font-medium pt-1 ${productsList.length > 0 ? '' : 'justify-center'}`}>
               <span className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/15">
-                <CheckCircle2 className="w-4 h-4 text-[#25D366]" /> Free Ongkir Area Bandung
+                <CheckCircle2 className="w-4 h-4 text-[#25D366]" /> Free Ongkir Bandung
               </span>
               <span className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/15">
-                <CheckCircle2 className="w-4 h-4 text-[#25D366]" /> Same Day Delivery
+                <CheckCircle2 className="w-4 h-4 text-[#25D366]" /> Same Day Delivery 2-4 Jam
               </span>
               <span className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/15">
-                <CheckCircle2 className="w-4 h-4 text-[#25D366]" /> Free Papan & Kartu Ucapan
+                <CheckCircle2 className="w-4 h-4 text-[#25D366]" /> Free Papan &amp; Kartu Ucapan
               </span>
             </div>
 
             {/* CTAs */}
-            <div className={`gsap-fade-in flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4 ${showPromo ? '' : 'justify-center'}`}>
+            <div className={`gsap-fade-in flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4 ${productsList.length > 0 ? '' : 'justify-center'}`}>
               <Link
                 href="/produk"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-white bg-gradient-to-r from-[#B83253] to-[#E56A88] hover:opacity-95 shadow-xl shadow-[#B83253]/35 transition-all hover:scale-[1.03] active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-white bg-gradient-to-r from-[#B83253] to-[#E56A88] hover:opacity-95 shadow-xl shadow-[#B83253]/35 transition-all hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
               >
-                <span>Lihat Katalog</span>
+                <span>Lihat Katalog Produk</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
@@ -384,61 +365,154 @@ export default function HeroBanner({
             </div>
           </div>
 
-          {/* Right Floating Promo Glass Card (Auto-hidden if no promo or expired) */}
-          {showPromo && (
-            <div className="lg:col-span-4 flex justify-center lg:justify-end">
+          {/* Right Floating Promo Glass Card with SLIDER */}
+          {activeProduct && (
+            <div
+              className="lg:col-span-4 flex justify-center lg:justify-end"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+            >
               <div
                 ref={cardPromoRef}
-                className="w-full max-w-sm bg-white/95 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border-2 border-white/60 hover:scale-[1.02] transition-transform"
+                className="w-full max-w-sm bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl shadow-2xl border-2 border-white/70 transition-all duration-300 relative"
               >
+                {/* Header Slider: Badge & Counter Controls */}
                 <div className="flex items-center justify-between gap-2 pb-2">
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#B83253] text-white shadow-sm">
-                    PROMO EKSKLUSIF
-                  </span>
-                  <span className="text-xs text-[#8E6D14] font-bold">Hemat Rp 100.000</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#B83253] text-white shadow-xs flex items-center gap-1">
+                      <Tag className="w-3 h-3" />
+                      <span>{activeProduct.isPromo ? 'PROMO EKSKLUSIF' : 'PILIHAN HERO'}</span>
+                    </span>
+                    {activeProduct.isPromo && activeProduct.promoPrice && activeProduct.normalPrice > activeProduct.promoPrice && (
+                      <span className="text-[11px] text-[#8E6D14] font-bold">
+                        Hemat {formatRupiah(activeProduct.normalPrice - activeProduct.promoPrice)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Slider Prev / Next Controls if multiple products */}
+                  {productsList.length > 1 && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-gray-400 mr-1">
+                        {currentIndex + 1}/{productsList.length}
+                      </span>
+                      <button
+                        onClick={handlePrev}
+                        className="w-6 h-6 rounded-full bg-[#FAF3F5] hover:bg-[#B83253] hover:text-white text-[#4A3E42] flex items-center justify-center transition-colors cursor-pointer"
+                        aria-label="Produk Sebelumnya"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={handleNext}
+                        className="w-6 h-6 rounded-full bg-[#FAF3F5] hover:bg-[#B83253] hover:text-white text-[#4A3E42] flex items-center justify-center transition-colors cursor-pointer"
+                        aria-label="Produk Selanjutnya"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="relative aspect-video w-full rounded-2xl overflow-hidden my-3 border border-[#F5E6EA] bg-[#FAF8F8]">
-                  <Image
-                    src="/images/categories/standing-acrylic.png"
-                    alt={promoProduct.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 350px"
-                  />
-                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white/90 text-[#4A3E42]">
-                    {promoProduct.sku}
-                  </span>
+                {/* Animated Slide Content */}
+                <div ref={slideCardRef} className="transition-all">
+                  {/* Image Container */}
+                  <div className="relative aspect-video w-full rounded-2xl overflow-hidden my-3 border border-[#F5E6EA] bg-[#FAF8F8]">
+                    <Image
+                      src={activeProduct.imageUrl || '/images/categories/standing-acrylic.png'}
+                      alt={activeProduct.name}
+                      fill
+                      className="object-cover transition-transform duration-500 hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, 350px"
+                    />
+
+                    {/* SKU Top Right */}
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white/90 text-[#4A3E42] shadow-xs">
+                      {activeProduct.sku}
+                    </span>
+
+                    {/* Floating Countdown Pill if promoEnd is set */}
+                    {activeProduct.isPromo && activeProduct.promoEnd && (
+                      <div className="absolute bottom-2 right-2 z-10">
+                        <PromoCountdown
+                          targetDate={activeProduct.promoEnd}
+                          variant="card"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Product Title */}
+                  <h2 className="font-serif text-base font-bold text-[#2D2527] line-clamp-1">
+                    {activeProduct.name}
+                  </h2>
+
+                  {/* Pricing */}
+                  <div className="flex items-baseline gap-2.5 mt-1.5">
+                    {activeProduct.isPromo && activeProduct.promoPrice ? (
+                      <>
+                        <span className="text-2xl font-extrabold text-[#B83253]">
+                          {formatRupiah(activeProduct.promoPrice)}
+                        </span>
+                        <span className="text-xs text-[#8A7E82] line-through font-medium">
+                          {formatRupiah(activeProduct.normalPrice)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-2xl font-extrabold text-[#2D2527]">
+                        {formatRupiah(activeProduct.normalPrice)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Short Description */}
+                  <p className="text-[11px] text-[#7A6D72] mt-1 line-clamp-2">
+                    {activeProduct.description ||
+                      'Standing flower eksklusif dengan garansi bunga segar dan gratis ongkir area Bandung.'}
+                  </p>
+
+                  {/* Action Buttons */}
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <Link
+                      href={activeProduct.slug ? `/produk/${activeProduct.slug}` : '/produk'}
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold text-[#4A3E42] bg-[#FAF3F5] hover:bg-[#F5E6EB] transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-[#B83253]" />
+                      <span>Lihat Detail</span>
+                    </Link>
+
+                    <a
+                      href={`https://wa.me/${whatsappNumber}?text=Halo%20Aurvella%20Florist,%20saya%20tertarik%20dengan%20produk%20hero%20${encodeURIComponent(
+                        activeProduct.name
+                      )}%20(SKU:%20${activeProduct.sku})`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#B83253] to-[#DF4D73] hover:opacity-95 shadow-md shadow-[#B83253]/25 transition-all"
+                    >
+                      <Phone className="w-3.5 h-3.5 fill-white" />
+                      <span>Pesan Promo</span>
+                    </a>
+                  </div>
                 </div>
 
-                <h2 className="font-serif text-base font-bold text-[#2D2527] line-clamp-1">
-                  {promoProduct.name}
-                </h2>
-
-                <div className="flex items-baseline gap-2.5 mt-2">
-                  <span className="text-2xl font-extrabold text-[#B83253]">
-                    Rp {promoProduct.promoPrice.toLocaleString('id-ID')}
-                  </span>
-                  <span className="text-xs text-[#8A7E82] line-through font-medium">
-                    Rp {promoProduct.normalPrice.toLocaleString('id-ID')}
-                  </span>
-                </div>
-
-                <p className="text-[11px] text-[#7A6D72] mt-1.5 line-clamp-2">
-                  Papan akrilik 3mm bening elegan dengan rangkaian bunga fresh & artificial pastel premium.
-                </p>
-
-                <a
-                  href={`https://wa.me/${whatsappNumber}?text=Halo%20Aurvella%20Florist,%20saya%20ingin%20klaim%20harga%20promo%20untuk%20${encodeURIComponent(
-                    promoProduct.name
-                  )}%20(SKU:%20${promoProduct.sku})`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#B83253] to-[#DF4D73] hover:opacity-95 shadow-md shadow-[#B83253]/25 transition-all"
-                >
-                  <span>Klaim Promo Ini</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </a>
+                {/* Slider Pagination Dots if multiple products */}
+                {productsList.length > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 pt-3 mt-2 border-t border-[#F5E6EA]">
+                    {productsList.map((_, dotIdx) => (
+                      <button
+                        key={`hero-dot-${dotIdx}`}
+                        type="button"
+                        onClick={() => setCurrentIndex(dotIdx)}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                          currentIndex === dotIdx
+                            ? 'w-6 bg-[#B83253]'
+                            : 'w-2 bg-gray-200 hover:bg-gray-300'
+                        }`}
+                        aria-label={`Slide ${dotIdx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

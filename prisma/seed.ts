@@ -43,10 +43,10 @@ async function main() {
       order: 2,
     },
     {
-      name: 'Standing VPC',
-      slug: 'standing-vpc',
-      description: 'Papan bunga standing foam VPC modern bernuansa premium untuk ucapan selamat & sukses',
-      image: '/images/categories/standing-vpc.png',
+      name: 'Standing PVC',
+      slug: 'standing-pvc',
+      description: 'Papan bunga standing foam PVC modern bernuansa premium untuk ucapan selamat & sukses',
+      image: '/images/categories/standing-pvc.png',
       order: 3,
     },
     {
@@ -147,21 +147,21 @@ async function main() {
       imageUrl: '/images/categories/standing-cermin.png',
     },
     {
-      sku: 'VPC-20261011-C9P5',
-      name: 'Standing VPC Grand Opening Blush',
-      slug: 'standing-vpc-grand-opening-blush',
-      categorySlug: 'standing-vpc',
+      sku: 'PVC-20261011-C9P5',
+      name: 'Standing PVC Grand Opening Blush',
+      slug: 'standing-pvc-grand-opening-blush',
+      categorySlug: 'standing-pvc',
       price: 750000,
       promoPrice: 650000,
       isPromo: true,
       isFeatured: true,
       description:
-        'Papan standing modern bahan foam VPC berkualitas anti air dengan printing HD nuansa blush watercolor dan bunga segar di atas dan bawah papan.',
-      specifications: `• Papan Foam VPC tebal presisi 80 x 120 cm
+        'Papan standing modern bahan foam PVC berkualitas anti air dengan printing HD nuansa blush watercolor dan bunga segar di atas dan bawah papan.',
+      specifications: `• Papan Foam PVC tebal presisi 80 x 120 cm
 • Stand kayu kokoh warna hitam/putih 150 cm
 • Bunga segar mawar, gerbera, dan aster
 • Desain custom sesuai logo dan nama pengirim`,
-      imageUrl: '/images/categories/standing-vpc.png',
+      imageUrl: '/images/categories/standing-pvc.png',
     },
     {
       sku: 'FRE-20261011-D3R8',

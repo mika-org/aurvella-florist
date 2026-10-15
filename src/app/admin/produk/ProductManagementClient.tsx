@@ -40,6 +40,7 @@ interface Product {
   isFeatured: boolean;
   isAvailable: boolean;
   isPublished: boolean;
+  showOnHero?: boolean;
   description: string | null;
   specifications: string | null;
   category: { id: string; name: string; slug: string };
@@ -86,6 +87,7 @@ export default function ProductManagementClient({
     isFeatured: true,
     isAvailable: true,
     isPublished: true,
+    showOnHero: false,
     description: '',
     specifications: '',
     imageUrl: '/images/categories/standing-acrylic.png',
@@ -112,6 +114,7 @@ export default function ProductManagementClient({
       isFeatured: false,
       isAvailable: true,
       isPublished: true,
+      showOnHero: false,
       description: '',
       specifications: '',
       imageUrl: '/images/categories/standing-acrylic.png',
@@ -134,6 +137,7 @@ export default function ProductManagementClient({
       isFeatured: p.isFeatured,
       isAvailable: p.isAvailable,
       isPublished: p.isPublished,
+      showOnHero: Boolean(p.showOnHero),
       description: p.description || '',
       specifications: p.specifications || '',
       imageUrl: p.images[0]?.url || '/images/categories/standing-acrylic.png',
@@ -171,6 +175,7 @@ export default function ProductManagementClient({
       isFeatured: formData.isFeatured,
       isAvailable: formData.isAvailable,
       isPublished: formData.isPublished,
+      showOnHero: formData.showOnHero,
       description: formData.description,
       specifications: formData.specifications,
       images: [{ url: formData.imageUrl, alt: formData.name, isPrimary: true }],
@@ -369,6 +374,11 @@ export default function ProductManagementClient({
                         {p.isFeatured && (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#DFB758] text-[#1E1719]">
                             Unggulan
+                          </span>
+                        )}
+                        {p.showOnHero && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#B83253] text-white">
+                            Hero Slider
                           </span>
                         )}
                       </div>
@@ -588,6 +598,17 @@ export default function ProductManagementClient({
                     className="rounded text-[#B83253]"
                   />
                   <span>Publikasikan ke Website</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer font-medium text-[#B83253]">
+                  <input
+                    type="checkbox"
+                    checked={formData.showOnHero}
+                    onChange={(e) =>
+                      setFormData({ ...formData, showOnHero: e.target.checked })
+                    }
+                    className="rounded text-[#B83253]"
+                  />
+                  <span>🌟 Tampilkan di Hero Banner (Slider Depan)</span>
                 </label>
               </div>
 

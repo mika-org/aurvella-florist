@@ -38,6 +38,10 @@ export async function GET(req: NextRequest) {
   ];
 
   const rows: string[][] = [];
+  let totalGrossIncome = 0;
+  let totalPaidIncome = 0;
+  let totalItemsQuantity = 0;
+  let totalItemsSubtotal = 0;
 
   for (const t of transactions) {
     const formattedDate = new Date(t.transactionDate).toLocaleString('id-ID', {
@@ -49,7 +53,20 @@ export async function GET(req: NextRequest) {
       minute: '2-digit',
     });
 
+    const txAmount = Number(t.totalAmount) || 0;
+    totalGrossIncome += txAmount;
+    if (t.paymentStatus === 'PAID') {
+      totalPaidIncome += txAmount;
+    }
+
     for (const item of t.items) {
+      const itemPrice = Number(item.price) || 0;
+      const itemQty = Number(item.quantity) || 1;
+      const itemSub = Number(item.subtotal) || itemPrice * itemQty;
+
+      totalItemsQuantity += itemQty;
+      totalItemsSubtotal += itemSub;
+
       rows.push([
         t.invoiceNumber,
         formattedDate,
@@ -60,10 +77,10 @@ export async function GET(req: NextRequest) {
         t.senderName || '-',
         item.productSku,
         item.productName,
-        String(Number(item.price)),
-        String(item.quantity),
-        String(Number(item.subtotal)),
-        String(Number(t.totalAmount)),
+        String(itemPrice),
+        String(itemQty),
+        String(itemSub),
+        String(txAmount),
         t.paymentMethod,
         t.paymentStatus,
         t.orderStatus,
@@ -71,6 +88,39 @@ export async function GET(req: NextRequest) {
       ]);
     }
   }
+
+  // Add Separator Row
+  rows.push(new Array(headers.length).fill(''));
+
+  // Add SUM Pemasukan & Total Row directly aligned with columns
+  rows.push([
+    'TOTAL KESELURUHAN (SUM)',
+    `${transactions.length} Transaksi`,
+    '-',
+    '-',
+    '-',
+    '-',
+    '-',
+    '-',
+    '-',
+    '-',
+    String(totalItemsQuantity),
+    String(totalItemsSubtotal),
+    String(totalGrossIncome),
+    '-',
+    `Lunas: Rp ${totalPaidIncome.toLocaleString('id-ID')}`,
+    '-',
+    `TOTAL PEMASUKAN: Rp ${totalGrossIncome.toLocaleString('id-ID')}`,
+  ]);
+
+  // Add Additional Summary Block
+  rows.push(new Array(headers.length).fill(''));
+  rows.push(['=== RINGKASAN REKAP KEUANGAN AURVELLA FLORIST ===', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push(['Total Transaksi', `${transactions.length} pesanan`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push(['Total Standing Flower Terjual', `${totalItemsQuantity} pcs`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push(['Total Omset / Pemasukan Kotor (Rp)', String(totalGrossIncome), `(Rp ${totalGrossIncome.toLocaleString('id-ID')})`, '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push(['Total Pembayaran Lunas (PAID) (Rp)', String(totalPaidIncome), `(Rp ${totalPaidIncome.toLocaleString('id-ID')})`, '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push(['Total Belum Lunas / Pending (Rp)', String(totalGrossIncome - totalPaidIncome), `(Rp ${(totalGrossIncome - totalPaidIncome).toLocaleString('id-ID')})`, '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
 
   const escapeCsv = (val: string) => {
     if (val === null || val === undefined) return '""';

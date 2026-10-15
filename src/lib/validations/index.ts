@@ -31,6 +31,7 @@ export const productSchema = z.object({
   promoStart: z.string().optional().nullable(),
   promoEnd: z.string().optional().nullable(),
   isFeatured: z.boolean().default(false),
+  showOnHero: z.boolean().default(false),
   isAvailable: z.boolean().default(true),
   isPublished: z.boolean().default(true),
   description: z.string().optional().nullable(),

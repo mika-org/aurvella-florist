@@ -12,8 +12,8 @@ interface FeaturedProductsProps {
 }
 
 export default function FeaturedProducts({
-  products,
-  categories,
+  products = [],
+  categories = [],
   whatsappNumber,
 }: FeaturedProductsProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

@@ -8,7 +8,7 @@ Website profesional untuk bisnis **Aurvella Florist** di Bandung yang menyediaka
 
 ### 1. Frontend Public
 - **Hero Banner Interaktif:** Menggunakan visual utama `hero-banner-2.jpg`, ornamen bunga melayang bertenaga **GSAP**, badge promo diskon, serta tombol CTA langsung.
-- **Section Pilih Kategori:** 5 Kategori wajib (*Standing Acrylic, Standing Cermin, Standing VPC, Standing Fresh, Standing Duka Cita*) dengan animasi interaktif GSAP saat diklik.
+- **Section Pilih Kategori:** 5 Kategori wajib (*Standing Acrylic, Standing Cermin, Standing PVC, Standing Fresh, Standing Duka Cita*) dengan animasi interaktif GSAP saat diklik.
 - **Produk Unggulan & Filter:** Katalog pilihan dengan harga normal, harga promo (strikethrough), label promo aktif, dan tombol pesan via WhatsApp otomatis.
 - **Informasi Layanan 24/7 & Garansi:** Free Ongkir Bandung, Same Day Delivery, pelayanan 24/7, fresh & artificial flower, serta jaminan kualitas produk.
 - **Ulasan Testimoni Pelanggan:** Carousel ulasan yang telah diverifikasi dan disetujui admin (*wajib di atas kontak*).
@@ -19,7 +19,7 @@ Website profesional untuk bisnis **Aurvella Florist** di Bandung yang menyediaka
 ### 2. Admin Dashboard (`/admin`)
 - **Autentikasi Aman:** Password hashing dengan bcrypt dan manajemen session JWT / HTTP-only cookies (`jose`).
 - **Dashboard Ringkasan:** Statistik real-time total produk, kategori, produk promo aktif, testimoni disetujui, dan pesan baru.
-- **Manajemen Produk:** Tambah, edit, hapus, kelola harga promo, status unggulan, deskripsi, spesifikasi akrilik default, dan SKU otomatis dengan prefix dinamis (`ACR-`, `CRM-`, `VPC-`, `FRE-`, `DUK-`).
+- **Manajemen Produk:** Tambah, edit, hapus, kelola harga promo, status unggulan, deskripsi, spesifikasi akrilik default, dan SKU otomatis dengan prefix dinamis (`ACR-`, `CRM-`, `PVC-`, `FRE-`, `DUK-`).
 - **Manajemen Kategori:** CRUD kategori produk, gambar PNG, dan proteksi penghapusan jika kategori masih memiliki produk.
 - **Manajemen Testimoni:** Persetujuan ulasan (tayang / sembunyikan) dan penambahan ulasan baru.
 - **Manajemen Pesan Masuk:** Tinjau pesan formulir, update status (Baru, Dibaca, Diproses, Selesai), dan balas langsung ke WhatsApp pengirim.

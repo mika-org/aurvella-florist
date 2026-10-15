@@ -19,6 +19,9 @@ import {
   Package,
   CheckCircle2,
   Calendar,
+  Users,
+  Phone,
+  Crown,
 } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
@@ -38,6 +41,8 @@ export default async function AdminDashboardPage() {
     transactions,
     topSellingProducts,
     recentTransactions,
+    topCustomers,
+    totalCustomers,
   ] = await Promise.all([
     prisma.product.count(),
     prisma.category.count(),
@@ -68,6 +73,11 @@ export default async function AdminDashboardPage() {
         items: true,
       },
     }),
+    prisma.customer.findMany({
+      orderBy: [{ totalOrders: 'desc' }, { totalSpent: 'desc' }],
+      take: 5,
+    }),
+    prisma.customer.count(),
   ]);
 
   // Aggregate Sales KPIs
@@ -124,6 +134,14 @@ export default async function AdminDashboardPage() {
       href: '/admin/kategori',
       icon: FolderTree,
       color: 'bg-[#FAF5FF] text-[#9333EA]',
+    },
+    {
+      title: 'Total Pelanggan',
+      value: `${totalCustomers} Kontak`,
+      subtext: 'Basis data pemesan',
+      href: '/admin/pelanggan',
+      icon: Users,
+      color: 'bg-[#F0FDF4] text-[#15803D]',
     },
   ];
 
@@ -368,6 +386,120 @@ export default async function AdminDashboardPage() {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Pelanggan Terbanyak Memesan (Top Loyal Customers) */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#F0E4E7] shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-[#FFF9ED] text-[#8E6D14] flex items-center justify-center border border-[#DFB758]/30">
+              <Crown className="w-5 h-5 text-[#DFB758]" />
+            </div>
+            <div>
+              <h2 className="font-serif text-lg font-bold text-[#2D2527]">
+                Pelanggan Terbanyak Memesan (Top Customers)
+              </h2>
+              <p className="text-xs text-[#7A6D72]">
+                Peringkat pelanggan loyal dengan frekuensi order dan total belanja tertinggi
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/admin/pelanggan"
+            className="text-xs font-bold text-[#B83253] hover:underline self-start sm:self-auto"
+          >
+            Kelola Semua Pelanggan ({totalCustomers}) &rarr;
+          </Link>
+        </div>
+
+        {topCustomers.length === 0 ? (
+          <p className="text-xs text-[#8A7E82] py-8 text-center bg-[#FAF8F8] rounded-2xl">
+            Belum ada data pelanggan tercatat.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {topCustomers.map((c, index) => {
+              const cleanWa = c.whatsapp.replace(/[^0-9]/g, '');
+              const isFirst = index === 0;
+              return (
+                <div
+                  key={c.id}
+                  className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+                    isFirst
+                      ? 'bg-gradient-to-br from-[#FFFBF2] to-white border-[#DFB758] shadow-sm ring-1 ring-[#DFB758]/30'
+                      : 'bg-white border-[#F0E4E7] hover:border-[#B83253]/30 shadow-xs'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            isFirst
+                              ? 'bg-[#DFB758] text-[#1E1719]'
+                              : index === 1
+                              ? 'bg-gray-200 text-gray-800'
+                              : index === 2
+                              ? 'bg-[#FDBA74] text-[#1E1719]'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {isFirst ? '👑' : index + 1}
+                        </span>
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-[#8E6D14]">
+                          {isFirst ? 'Top #1 VIP' : `Peringkat #${index + 1}`}
+                        </span>
+                      </div>
+
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF0F4] text-[#B83253]">
+                        {c.totalOrders}x Order
+                      </span>
+                    </div>
+
+                    <h3 className="font-bold text-sm text-[#2D2527] line-clamp-1">{c.name}</h3>
+
+                    <div className="mt-2 flex items-baseline justify-between text-xs">
+                      <span className="text-gray-500 text-[11px]">Total Belanja:</span>
+                      <span className="font-extrabold text-[#B83253]">
+                        {formatRupiah(Number(c.totalSpent))}
+                      </span>
+                    </div>
+
+                    {c.address && (
+                      <p className="text-[11px] text-gray-500 mt-1 line-clamp-1">
+                        📍 {c.address}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t border-[#F5E6EA] flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {c.lastOrderAt
+                        ? `Order: ${new Date(c.lastOrderAt).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}`
+                        : 'Belum ada'}
+                    </span>
+
+                    <a
+                      href={`https://wa.me/${cleanWa}?text=Halo%20${encodeURIComponent(
+                        c.name
+                      )},%20terima%20kasih%20telah%20menjadi%20pelanggan%20setia%20Aurvella%20Florist!`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1E7E34] hover:text-[#155d27] bg-[#E8F8EE] px-2.5 py-1 rounded-lg transition-colors"
+                      title="Kirim pesan WhatsApp"
+                    >
+                      <Phone className="w-3 h-3 fill-[#25D366] text-[#25D366]" />
+                      <span>Chat WA</span>
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Recent Inquiries List */}

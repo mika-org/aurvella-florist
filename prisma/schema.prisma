@@ -48,6 +48,7 @@ model Product {
   promoStart     DateTime?      @map("promo_start")
   promoEnd       DateTime?      @map("promo_end")
   isFeatured     Boolean        @default(false) @map("is_featured")
+  showOnHero     Boolean        @default(false) @map("show_on_hero")
   isAvailable    Boolean        @default(true) @map("is_available")
   isPublished    Boolean        @default(true) @map("is_published")
   order          Int            @default(0)
@@ -65,6 +66,7 @@ model Product {
   @@index([slug])
   @@index([sku])
   @@index([isPublished, isFeatured])
+  @@index([showOnHero])
   @@map("products")
 }
 
@@ -137,9 +139,31 @@ model SiteSetting {
   @@map("site_settings")
 }
 
+model Customer {
+  id           String        @id @default(uuid())
+  name         String
+  whatsapp     String        @unique
+  email        String?
+  address      String?       @db.Text
+  notes        String?       @db.Text
+  totalOrders  Int           @default(0) @map("total_orders")
+  totalSpent   Decimal       @default(0) @db.Decimal(12, 2) @map("total_spent")
+  lastOrderAt  DateTime?     @map("last_order_at")
+  transactions Transaction[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@index([whatsapp])
+  @@index([totalOrders])
+  @@index([totalSpent])
+  @@map("customers")
+}
+
 model Transaction {
   id              String            @id @default(uuid())
   invoiceNumber   String            @unique @map("invoice_number")
+  customerId      String?           @map("customer_id")
+  customer        Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerName    String            @map("customer_name")
   customerPhone   String            @map("customer_phone")
   customerAddress String?           @db.Text @map("customer_address")
@@ -157,6 +181,7 @@ model Transaction {
 
   @@index([invoiceNumber])
   @@index([customerPhone])
+  @@index([customerId])
   @@index([transactionDate])
   @@map("transactions")
 }

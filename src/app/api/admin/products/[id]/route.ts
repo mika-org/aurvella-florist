@@ -63,6 +63,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
         promoStart: data.promoStart ? new Date(data.promoStart) : null,
         promoEnd: data.promoEnd ? new Date(data.promoEnd) : null,
         isFeatured: data.isFeatured,
+        showOnHero: data.showOnHero ?? false,
         isAvailable: data.isAvailable,
         isPublished: data.isPublished,
         description: data.description || null,

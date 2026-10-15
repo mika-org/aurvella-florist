@@ -27,6 +27,20 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/kategori/standing-vpc',
+        destination: '/kategori/standing-pvc',
+        permanent: true,
+      },
+      {
+        source: '/produk/standing-vpc-grand-opening-blush',
+        destination: '/produk/standing-pvc-grand-opening-blush',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -6,7 +6,7 @@ async function main() {
   const initialFaqs = [
     {
       question: 'Berapa lama proses perangkaian standing flower di Aurvella Florist?',
-      answer: 'Proses perangkaian standing flower membutuhkan waktu sekitar 2 hingga 4 jam tergantung model dan kerumitan desain (Standing Akrilik, Standing Cermin, atau VPC). Kami juga menyediakan layanan Same Day Delivery untuk pesanan mendesak di hari yang sama.',
+      answer: 'Proses perangkaian standing flower membutuhkan waktu sekitar 2 hingga 4 jam tergantung model dan kerumitan desain (Standing Akrilik, Standing Cermin, atau PVC). Kami juga menyediakan layanan Same Day Delivery untuk pesanan mendesak di hari yang sama.',
       order: 1,
       isActive: true,
     },

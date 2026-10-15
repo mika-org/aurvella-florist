@@ -11,7 +11,7 @@ import GoogleMapsSection from '@/components/sections/GoogleMapsSection';
 
 
 export default async function HomePage() {
-  const [categories, products, testimonials, faqs, settings] = await Promise.all([
+  const [categories, products, heroProductsRaw, testimonials, faqs, settings] = await Promise.all([
     prisma.category.findMany({
       where: { isActive: true },
       orderBy: { order: 'asc' },
@@ -22,6 +22,18 @@ export default async function HomePage() {
     prisma.product.findMany({
       where: { isPublished: true, isFeatured: true },
       orderBy: { order: 'asc' },
+      include: {
+        category: { select: { name: true, slug: true } },
+        images: { orderBy: { order: 'asc' }, take: 1 },
+      },
+    }),
+    prisma.product.findMany({
+      where: {
+        isPublished: true,
+        OR: [{ showOnHero: true }, { isPromo: true }],
+      },
+      orderBy: [{ isPromo: 'desc' }, { order: 'asc' }],
+      take: 10,
       include: {
         category: { select: { name: true, slug: true } },
         images: { orderBy: { order: 'asc' }, take: 1 },
@@ -46,17 +58,31 @@ export default async function HomePage() {
 
   const whatsappNumber = settingsMap.whatsapp_international || '6285770187018';
 
-  // Find promo product for hero
-  const promoProduct = products.find((p) => p.isPromo && p.promoPrice);
-  const heroPromo = promoProduct
-    ? {
-        name: promoProduct.name,
-        normalPrice: Number(promoProduct.price),
-        promoPrice: Number(promoProduct.promoPrice),
-        sku: promoProduct.sku,
-        promoEnd: promoProduct.promoEnd ? promoProduct.promoEnd.toISOString() : null,
-      }
-    : undefined;
+  // Format products for hero slider
+  const heroProducts = heroProductsRaw.map((p) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    sku: p.sku,
+    normalPrice: Number(p.price),
+    promoPrice: p.promoPrice ? Number(p.promoPrice) : null,
+    isPromo: p.isPromo,
+    promoEnd: p.promoEnd ? p.promoEnd.toISOString() : null,
+    imageUrl: p.images[0]?.url || null,
+    categoryName: p.category?.name,
+    description: p.description,
+  }));
+
+  const serializedCategories = categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    description: c.description,
+    image: c.image,
+    order: c.order,
+    isActive: c.isActive,
+    _count: c._count,
+  }));
 
   const serializedProducts = products.map((p) => ({
     ...p,
@@ -67,16 +93,16 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* 1. Hero Banner */}
-      <HeroBanner whatsappNumber={whatsappNumber} promoProduct={heroPromo} />
+      {/* 1. Hero Banner Slider */}
+      <HeroBanner whatsappNumber={whatsappNumber} heroProducts={heroProducts} />
 
       {/* 2. Pilih Kategori */}
-      <CategorySection categories={categories} />
+      <CategorySection categories={serializedCategories} />
 
       {/* 3. Produk Unggulan */}
       <FeaturedProducts
         products={serializedProducts}
-        categories={categories}
+        categories={serializedCategories}
         whatsappNumber={whatsappNumber}
       />
 

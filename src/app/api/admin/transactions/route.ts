@@ -132,11 +132,42 @@ export async function POST(req: NextRequest) {
 
     const txDate = customDate ? new Date(customDate) : new Date();
 
+    // Auto find or create customer
+    const cleanPhone = customerPhone.trim().replace(/[^0-9]/g, '');
+    let customer = await prisma.customer.findUnique({
+      where: { whatsapp: cleanPhone },
+    });
+
+    if (!customer) {
+      customer = await prisma.customer.create({
+        data: {
+          name: customerName.trim(),
+          whatsapp: cleanPhone,
+          address: customerAddress || null,
+          totalOrders: 1,
+          totalSpent: totalAmount,
+          lastOrderAt: txDate,
+        },
+      });
+    } else {
+      customer = await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          name: customerName.trim(),
+          address: customerAddress || customer.address,
+          totalOrders: { increment: 1 },
+          totalSpent: { increment: totalAmount },
+          lastOrderAt: txDate,
+        },
+      });
+    }
+
     const newTransaction = await prisma.transaction.create({
       data: {
         invoiceNumber,
-        customerName,
-        customerPhone,
+        customerId: customer.id,
+        customerName: customerName.trim(),
+        customerPhone: cleanPhone,
         customerAddress: customerAddress || null,
         boardGreeting: boardGreeting || null,
         senderName: senderName || null,
@@ -152,6 +183,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         items: true,
+        customer: true,
       },
     });
 
