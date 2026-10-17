@@ -10,6 +10,9 @@ import ContactSection from '@/components/sections/ContactSection';
 import GoogleMapsSection from '@/components/sections/GoogleMapsSection';
 
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HomePage() {
   const [categories, products, heroProductsRaw, testimonials, faqs, settings] = await Promise.all([
     prisma.category.findMany({
@@ -30,10 +33,9 @@ export default async function HomePage() {
     prisma.product.findMany({
       where: {
         isPublished: true,
-        OR: [{ showOnHero: true }, { isPromo: true }],
+        showOnHero: true,
       },
-      orderBy: [{ isPromo: 'desc' }, { order: 'asc' }],
-      take: 10,
+      orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
       include: {
         category: { select: { name: true, slug: true } },
         images: { orderBy: { order: 'asc' }, take: 1 },
@@ -58,9 +60,8 @@ export default async function HomePage() {
 
   const whatsappNumber = settingsMap.whatsapp_international || '6285770187018';
 
-  // Format products for hero slider (fallback to products if hero is empty so it never disappears)
-  const heroSource = heroProductsRaw.length > 0 ? heroProductsRaw : products.slice(0, 6);
-  const heroProducts = heroSource.map((p) => ({
+  // Format products for hero slider: strictly only checked products (showOnHero: true)
+  const heroProducts = heroProductsRaw.map((p) => ({
     id: p.id,
     name: p.name,
     slug: p.slug,

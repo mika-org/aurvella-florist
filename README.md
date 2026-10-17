@@ -30,6 +30,7 @@ Website profesional untuk bisnis **Aurvella Florist** di Bandung yang menyediaka
 
 ## 🛠️ Teknologi yang Digunakan
 
+- **Runtime & Package Manager:** Node.js (v20+) & npm
 - **Framework:** Next.js (App Router) & React
 - **Bahasa:** TypeScript
 - **Database:** PostgreSQL

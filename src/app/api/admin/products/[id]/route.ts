@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
 import { productSchema } from '@/lib/validations';
@@ -90,6 +91,10 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
       });
     }
 
+    revalidatePath('/');
+    revalidatePath('/produk');
+    revalidatePath('/admin/produk');
+
     return NextResponse.json({ success: true, product: updatedProduct });
   } catch (error: any) {
     console.error('Error updating product:', error);
@@ -121,6 +126,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       data: updateData,
     });
 
+    revalidatePath('/');
+    revalidatePath('/produk');
+    revalidatePath('/admin/produk');
+
     return NextResponse.json({ success: true, product: updated });
   } catch (error: any) {
     console.error('Error quick patching product:', error);
@@ -137,6 +146,11 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
     await prisma.product.delete({ where: { id } });
+
+    revalidatePath('/');
+    revalidatePath('/produk');
+    revalidatePath('/admin/produk');
+
     return NextResponse.json({ success: true, message: 'Produk berhasil dihapus' });
   } catch (error: any) {
     console.error('Error deleting product:', error);

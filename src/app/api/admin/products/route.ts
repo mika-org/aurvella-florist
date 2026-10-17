@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
 import { productSchema } from '@/lib/validations';
@@ -114,6 +115,10 @@ export async function POST(req: NextRequest) {
         images: true,
       },
     });
+
+    revalidatePath('/');
+    revalidatePath('/produk');
+    revalidatePath('/admin/produk');
 
     return NextResponse.json({ success: true, product: createdProduct });
   } catch (error: any) {

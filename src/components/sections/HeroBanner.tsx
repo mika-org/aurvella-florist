@@ -23,64 +23,6 @@ export interface HeroProductItem {
   description?: string | null;
 }
 
-const DEFAULT_HERO_PRODUCTS: HeroProductItem[] = [
-  {
-    name: 'Standing Acrylic - Floral Symphony Pink (800K)',
-    slug: 'standing-acrylic-floral-symphony-pink-800k',
-    sku: 'ACR-20261017-0001',
-    normalPrice: 800000,
-    promoPrice: 750000,
-    isPromo: true,
-    imageUrl: '/products/Standing Acrylik Artificial/800k.jpg',
-    categoryName: 'Standing Acrylic',
-    description: 'Standing flower papan acrylic mewah dengan kombinasi warna soft pink dan bunga artificial impor premium.',
-  },
-  {
-    name: 'Standing Cermin - Mirror Royal Arch (850K)',
-    slug: 'standing-cermin-mirror-royal-arch-850k',
-    sku: 'MIR-20261017-0001',
-    normalPrice: 850000,
-    promoPrice: null,
-    isPromo: false,
-    imageUrl: '/products/Standing Cermin-Miror Artificial/850k.jpg',
-    categoryName: 'Standing Cermin',
-    description: 'Standing mirror wedding mewah dengan ukiran bunga artistik elegan untuk momen teristimewa.',
-  },
-  {
-    name: 'Standing PVC - Lavender Dream Chic (550K)',
-    slug: 'standing-pvc-lavender-dream-chic-550k',
-    sku: 'PVC-20261017-0001',
-    normalPrice: 550000,
-    promoPrice: null,
-    isPromo: false,
-    imageUrl: '/products/Standing Flower PVC Artificial/Standing PVC Artificial 550K.jpg',
-    categoryName: 'Standing PVC',
-    description: 'Papan standing PVC modern untuk grand opening dan ucapan selamat & sukses di Bandung.',
-  },
-  {
-    name: 'Standing Fresh - Imperial Masterpiece Stand (850K)',
-    slug: 'standing-fresh-imperial-masterpiece-stand-850k',
-    sku: 'FRS-20261017-0001',
-    normalPrice: 850000,
-    promoPrice: 799000,
-    isPromo: true,
-    imageUrl: '/products/Standing Flower Fresh/850k.jpg',
-    categoryName: 'Standing Fresh',
-    description: 'Rangkaian bunga segar asli pilihan dengan keharuman alami dan tampilan berkelas.',
-  },
-  {
-    name: 'Bunga Papan Dukacita 2x1m - Graceful Tribute (500K)',
-    slug: 'bunga-papan-dukacita-2x1m-graceful-tribute-500k',
-    sku: 'BPD-20261017-0001',
-    normalPrice: 500000,
-    promoPrice: null,
-    isPromo: false,
-    imageUrl: '/products/Bunga Papan Dukacita/Dukacita 2x1 meter 500k (2).jpg',
-    categoryName: 'Bunga Papan Dukacita',
-    description: 'Karangan bunga papan duka cita khidmat dengan ukuran 2x1 meter untuk penghormatan terbaik.',
-  },
-];
-
 interface HeroBannerProps {
   whatsappNumber?: string;
   heroProducts?: HeroProductItem[];
@@ -106,7 +48,7 @@ export default function HeroBanner({
   const cardPromoRef = useRef<HTMLDivElement>(null);
   const slideCardRef = useRef<HTMLDivElement>(null);
 
-  // Normalize products list: combine heroProducts or fallback to promoProduct or default curated items
+  // Products list strictly from checked items in admin
   const productsList: HeroProductItem[] = React.useMemo(() => {
     if (heroProducts && heroProducts.length > 0) {
       return heroProducts;
@@ -125,7 +67,7 @@ export default function HeroBanner({
         },
       ];
     }
-    return DEFAULT_HERO_PRODUCTS;
+    return [];
   }, [heroProducts, promoProduct]);
 
   const totalSlides = productsList.length;
@@ -135,7 +77,7 @@ export default function HeroBanner({
   const [isPaused, setIsPaused] = useState(false);
 
   const safeIndex = totalSlides > 0 ? ((currentIndex % totalSlides) + totalSlides) % totalSlides : 0;
-  const activeProduct = productsList[safeIndex] || productsList[0];
+  const activeProduct = totalSlides > 0 ? productsList[safeIndex] : null;
 
   // Auto-play slider every 5 seconds (pauses when user hovers or interacts)
   useEffect(() => {
@@ -488,10 +430,17 @@ export default function HeroBanner({
                 {/* Header Slider: Badge & Counter Controls */}
                 <div className="flex items-center justify-between gap-2 pb-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#B83253] text-white shadow-xs flex items-center gap-1">
-                      <Tag className="w-3 h-3" />
-                      <span>{activeProduct.isPromo ? 'PROMO EKSKLUSIF' : 'PILIHAN HERO'}</span>
-                    </span>
+                    {activeProduct.isPromo && (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#B83253] text-white shadow-xs flex items-center gap-1">
+                        <Tag className="w-3 h-3" />
+                        <span>PROMO EKSKLUSIF</span>
+                      </span>
+                    )}
+                    {activeProduct.categoryName && !activeProduct.isPromo && (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FAF3F5] text-[#B83253] border border-[#F8B4C4]/60">
+                        {activeProduct.categoryName}
+                      </span>
+                    )}
                     {activeProduct.isPromo && activeProduct.promoPrice && activeProduct.normalPrice > activeProduct.promoPrice && (
                       <span className="text-[11px] text-[#8E6D14] font-bold">
                         Hemat {formatRupiah(activeProduct.normalPrice - activeProduct.promoPrice)}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
 
@@ -95,6 +96,10 @@ export async function POST(req: NextRequest) {
       default:
         return NextResponse.json({ error: `Aksi massal "${action}" tidak dikenali` }, { status: 400 });
     }
+
+    revalidatePath('/');
+    revalidatePath('/produk');
+    revalidatePath('/admin/produk');
 
     return NextResponse.json({
       success: true,

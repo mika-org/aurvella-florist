@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     fs.writeFileSync(path.join(publicUploads, filename), buffer);
 
     // If VPS storage folder exists, also write there
-    if (fs.existsSync(vpsStorage)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ vpsStorage)) {
       try {
         fs.writeFileSync(path.join(vpsStorage, filename), buffer);
       } catch (err) {
