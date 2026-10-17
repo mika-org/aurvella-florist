@@ -50,7 +50,14 @@ const DEFAULT_CATEGORIES: CategoryItem[] = [
     name: 'Standing Duka Cita',
     slug: 'standing-duka-cita',
     description: 'Standing flower belasungkawa anggun bernuansa putih dan krem untuk penghormatan terbaik',
-    image: '/images/categories/standing-duka-cita.png',
+    image: '/products/Standing Dukacita Fresh Flower/1000k.jpg',
+  },
+  {
+    id: 'cmv2r6cs90006u260p7ceirdz',
+    name: 'Bunga Papan Dukacita',
+    slug: 'bunga-papan-dukacita',
+    description: 'Papan bunga duka cita khidmat dan megah dengan aneka ukuran untuk penghormatan serta simpati mendalam',
+    image: '/products/Bunga Papan Dukacita/Dukacita 2x1,5 meter 1000k.jpg',
   },
 ];
 
@@ -278,23 +285,52 @@ export default function CategorySection({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFF0F4] border border-[#F8B4C4]/60 mb-3 shadow-xs">
+        <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFF0F4] border border-[#F8B4C4]/70 mb-3 shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-[#B83253]" />
             <span className="text-[11px] sm:text-xs uppercase tracking-widest text-[#B83253] font-bold">
-              Koleksi Eksklusif Aurvella
+              Aurvella Florist by. Maharani Florist
             </span>
           </div>
 
           <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#2D2527] tracking-tight">
-            Pilihan Kategori Standing Flower
+            Katalog Lengkap Karangan Bunga &amp; Standing Flower
           </h2>
 
           <div className="w-20 h-1 bg-gradient-to-r from-[#B83253] via-[#DFB758] to-[#B83253] mx-auto rounded-full my-3.5" />
 
           <p className="text-[#6B5E63] text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
-            Hadir dalam 5 pilihan material premium untuk grand opening, pernikahan, anniversary, ucapan selamat & sukses, hingga duka cita khidmat.
+            Kini hadir semakin kumplit sebagai bagian dari <strong className="text-[#2D2527]">Maharani Florist Bandung</strong>. Menghadirkan koleksi terlengkap mulai dari <strong className="text-[#B83253]">Spesialis Standing Flower No. 1 di Bandung</strong> (Acrylic, Cermin, PVC, &amp; Bunga Segar) hingga <strong className="text-[#2D2527]">Bunga Papan Dukacita</strong> resmi dengan pengerjaan rapi dan layanan 24 jam.
           </p>
+        </div>
+
+        {/* Maharani Florist Synergy Banner */}
+        <div className="max-w-4xl mx-auto mb-8 p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#FFF5F7] via-[#FFFDF8] to-[#FFF5F7] border border-[#F8B4C4]/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#B83253] to-[#8E1F3B] text-white flex items-center justify-center font-serif font-extrabold text-sm shrink-0 shadow-md">
+              AF
+            </div>
+            <div>
+              <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                <span className="font-bold text-sm sm:text-base text-[#2D2527]">
+                  Aurvella Florist by. Maharani Florist
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DFB758]/20 text-[#8E6D14] border border-[#DFB758]/40">
+                  Cabang Resmi Maharani Florist
+                </span>
+              </div>
+              <p className="text-xs text-[#6B5E63] mt-1 leading-relaxed">
+                Kini katalog kami semakin lengkap untuk melayani seluruh pesanan karangan bunga &amp; standing flower di Kota Bandung, dengan tetap mengutamakan kualitas nomor 1.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/produk"
+            className="shrink-0 px-4 py-2.5 rounded-full bg-[#B83253] hover:bg-[#962340] text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 hover:scale-102"
+          >
+            <span>Lihat Semua Katalog</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         {/* Quick Filter Pills (Smooth scroll on mobile, centered on desktop) */}
@@ -346,17 +382,17 @@ export default function CategorySection({
         </div>
 
         {/* Category Cards Grid
-            - Mobile (<640px): 2 columns for items 1-4, 5th item spans 2 columns as a highlight card
+            - Mobile (<640px): 2 columns
             - Tablet (640px-1024px): 3 columns
-            - Laptop/Desktop (>=1024px): 5 columns side by side */}
+            - Laptop/Desktop (>=1024px): 3 to 6 columns side by side */}
         <div
           ref={cardsGridRef}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-5 lg:gap-5 xl:gap-6 items-stretch"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-4 xl:gap-5 items-stretch"
         >
           {categoriesList.map((cat, index) => {
             const isSelected = selectedSlug === cat.slug;
             const hasAnySelected = selectedSlug !== null;
-            const isLastOnMobile = index === 4;
+            const isLastOnMobile = index === categoriesList.length - 1 && categoriesList.length % 2 !== 0;
 
             return (
               <div

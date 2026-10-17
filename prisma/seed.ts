@@ -63,6 +63,13 @@ async function main() {
       image: '/images/categories/standing-duka-cita.png',
       order: 5,
     },
+    {
+      name: 'Bunga Papan Dukacita',
+      slug: 'bunga-papan-dukacita',
+      description: 'Rangkaian bunga papan duka cita khidmat dan megah dengan aneka ukuran untuk penghormatan serta simpati mendalam di Bandung',
+      image: '/products/Bunga Papan Dukacita/Dukacita 2x1,5 meter 1000k.jpg',
+      order: 6,
+    },
   ];
 
   const categoriesMap: Record<string, string> = {};

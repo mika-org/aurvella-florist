@@ -37,6 +37,7 @@ export const productSchema = z.object({
   description: z.string().optional().nullable(),
   specifications: z.string().optional().nullable(),
   order: z.coerce.number().int().default(0),
+  totalSold: z.coerce.number().int().min(0).default(0).optional(),
   seoTitle: z.string().max(100).optional().nullable(),
   seoDescription: z.string().max(250).optional().nullable(),
   images: z

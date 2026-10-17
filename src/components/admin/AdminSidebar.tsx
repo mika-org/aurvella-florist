@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -43,6 +43,38 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  // Poll and listen for unread contact message updates
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch('/api/admin/messages/poll', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && typeof data.unreadCount === 'number') {
+            setUnreadCount(data.unreadCount);
+          }
+        }
+      } catch {}
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 8000);
+
+    const handleCustomEvent = (e: any) => {
+      if (typeof e.detail?.unreadCount === 'number') {
+        setUnreadCount(e.detail.unreadCount);
+      }
+    };
+
+    window.addEventListener('aurvella:unread-messages', handleCustomEvent);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('aurvella:unread-messages', handleCustomEvent);
+    };
+  }, []);
 
   // If on login page, don't show sidebar
   if (pathname === '/admin/login') {
@@ -106,19 +138,29 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
             <Image src="/logo.png" alt="Aurvella Logo" fill className="object-contain" sizes="36px" />
           </div>
           <div>
-            <span className="font-serif font-bold text-base text-[#2D2527] block leading-none">
-              Aurvella Admin
+            <div className="flex items-baseline gap-1">
+              <span className="font-serif font-bold text-base text-[#2D2527] block leading-none">
+                Aurvella Florist
+              </span>
+              <span className="text-[10px] text-[#B83253] font-bold italic">
+                by. Maharani
+              </span>
+            </div>
+            <span className="text-[9px] text-[#8E6D14] font-bold uppercase tracking-wider block mt-0.5">
+              Spesialis Standing Flower Bandung
             </span>
-            <span className="text-[10px] text-[#8E6D14] font-medium">Florist Management</span>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-xl text-[#2D2527] hover:bg-[#FAF3F5] transition-colors"
+          className="relative p-2 rounded-xl text-[#2D2527] hover:bg-[#FAF3F5] transition-colors"
           aria-label="Toggle Navigation Menu"
         >
           {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#EF4444] border-2 border-white animate-pulse" />
+          )}
         </button>
       </div>
 
@@ -147,7 +189,10 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
                 <span className="font-serif font-bold text-base text-white tracking-wide block leading-tight">
                   Aurvella Florist
                 </span>
-                <span className="text-[10px] uppercase tracking-widest text-[#DFB758] font-bold">
+                <span className="text-[10px] text-[#F8B4C4] font-medium block">
+                  by. Maharani Florist
+                </span>
+                <span className="text-[9px] uppercase tracking-widest text-[#DFB758] font-bold block">
                   Admin Panel
                 </span>
               </div>
@@ -223,9 +268,16 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
                           <span className="truncate">{item.label}</span>
                         </div>
 
-                        {isActive && (
-                          <ChevronRight className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                        )}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {item.href === '/admin/pesan' && unreadCount > 0 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EF4444] text-white shadow-xs animate-pulse">
+                              {unreadCount}
+                            </span>
+                          )}
+                          {isActive && (
+                            <ChevronRight className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                          )}
+                        </div>
                       </Link>
                     );
                   })}

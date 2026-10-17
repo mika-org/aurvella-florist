@@ -71,6 +71,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
         order: data.order,
         seoTitle: data.seoTitle || null,
         seoDescription: data.seoDescription || null,
+        ...(data.totalSold !== undefined ? { totalSold: data.totalSold } : {}),
         ...(data.sku ? { sku: data.sku } : {}),
       },
     });
@@ -93,6 +94,37 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
   } catch (error: any) {
     console.error('Error updating product:', error);
     return NextResponse.json({ error: error.message || 'Gagal update produk' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: RouteContext) {
+  const admin = await getCurrentAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    const body = await req.json();
+
+    const allowedFields = ['showOnHero', 'isFeatured', 'isPublished', 'isAvailable', 'order'];
+    const updateData: Record<string, any> = {};
+
+    for (const key of allowedFields) {
+      if (key in body) {
+        updateData[key] = body[key];
+      }
+    }
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return NextResponse.json({ success: true, product: updated });
+  } catch (error: any) {
+    console.error('Error quick patching product:', error);
+    return NextResponse.json({ error: error.message || 'Gagal update status produk' }, { status: 500 });
   }
 }
 

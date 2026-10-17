@@ -33,11 +33,16 @@ export default function Navbar({
               />
             </div>
             <div>
-              <span className="font-serif text-2xl font-bold tracking-tight text-[#2D2527] group-hover:text-[#B83253] transition-colors block leading-tight">
-                {businessName}
-              </span>
-              <span className="block text-[10px] sm:text-[11px] uppercase tracking-wider text-[#B89223] font-semibold">
-                STANDING FLOWER NO. 1 DI BANDUNG
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#2D2527] group-hover:text-[#B83253] transition-colors leading-tight">
+                  Aurvella Florist
+                </span>
+                <span className="text-[11px] sm:text-xs font-semibold text-[#B83253] italic">
+                  by. Maharani Florist
+                </span>
+              </div>
+              <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider text-[#B89223] font-bold">
+                SPESIALIS STANDING FLOWER NO. 1 DI BANDUNG
               </span>
             </div>
           </Link>

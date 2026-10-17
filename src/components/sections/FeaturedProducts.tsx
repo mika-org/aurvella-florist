@@ -30,13 +30,13 @@ export default function FeaturedProducts({
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-[#B83253] font-bold">
               <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-              Katalog Pilihan
+              Aurvella Florist by. Maharani Florist
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2D2527] mt-2">
-              Produk Unggulan Aurvella
+              Produk Pilihan &amp; Unggulan
             </h2>
             <p className="text-[#6B5E63] text-sm sm:text-base mt-2 max-w-xl">
-              Rangkaian standing flower paling favorit untuk berbagai keperluan resmi maupun personal di wilayah Bandung.
+              Rangkaian standing flower paling favorit dan aneka karangan bunga pilihan terbaik untuk berbagai momen berharga di wilayah Bandung.
             </p>
           </div>
 

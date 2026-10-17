@@ -309,11 +309,16 @@ export default function LinkTreeClient({
             </div>
           </div>
 
-          <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#1E1719] mt-4 tracking-tight">
-            {businessName}
-          </h1>
+          <div className="flex items-baseline justify-center gap-1.5 flex-wrap mt-4">
+            <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#1E1719] tracking-tight">
+              Aurvella Florist
+            </h1>
+            <span className="text-xs font-bold text-[#B83253] italic">
+              by. Maharani Florist
+            </span>
+          </div>
           <p className="text-xs font-bold text-[#B89223] uppercase tracking-widest mt-1">
-            Standing Flower Specialist Bandung
+            SPESIALIS STANDING FLOWER NO. 1 DI BANDUNG
           </p>
           <p className="text-xs text-[#524448] font-medium mt-2 max-w-sm mx-auto leading-relaxed">
             {tagline}

@@ -31,22 +31,38 @@ export default function Footer({
           {/* Brand info */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#F8B4C4]/60 shrink-0 p-0.5">
+              <div className="relative w-11 h-11 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#F8B4C4]/60 shrink-0 p-0.5">
                 <Image
                   src="/logo.png"
                   alt={`${businessName} Logo`}
                   fill
                   className="object-contain"
-                  sizes="40px"
+                  sizes="44px"
                 />
               </div>
-              <span className="font-serif text-2xl font-bold tracking-tight text-[#FDE8ED]">
-                {businessName}
-              </span>
+              <div>
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="font-serif text-2xl font-bold tracking-tight text-[#FDE8ED]">
+                    Aurvella Florist
+                  </span>
+                  <span className="text-xs font-semibold text-[#DFB758] italic font-serif">
+                    by. Maharani Florist
+                  </span>
+                </div>
+                <div className="inline-block mt-0.5 px-2 py-0.5 rounded bg-[#DFB758]/15 border border-[#DFB758]/30">
+                  <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider text-[#F1D78B] font-extrabold">
+                    SPESIALIS STANDING FLOWER NO. 1 DI BANDUNG
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-white/70 leading-relaxed">
-              Spesialis Standing Flower Bandung berkelas premium. Menghadirkan rangkaian bunga akrilik, standing cermin, papan PVC, dan bunga segar pilihan dengan gratis ongkir untuk area Bandung.
+            <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+              <strong>Aurvella Florist by. Maharani Florist</strong> merupakan cabang resmi dan divisi spesialis dari <strong>Maharani Florist Bandung</strong>. Menghadirkan katalog bunga yang kini semakin kumplit — mulai dari reputasi utama kami sebagai <strong>Spesialis Standing Flower No. 1 di Bandung</strong> (Standing Acrylic modern, Cermin wedding, Foam PVC elegan, &amp; Bunga Segar alami) hingga <strong>Bunga Papan Dukacita</strong> resmi dengan layanan ramah 24 jam dan jaminan tepat waktu.
             </p>
+            <div className="p-3 rounded-xl bg-white/[0.06] border border-[#DFB758]/30 text-[11px] text-[#F1D78B]">
+              <span className="font-bold text-white block mb-0.5">Cabang Resmi Maharani Florist Group:</span>
+              Ragam produk kini semakin lengkap untuk seluruh kebutuhan ucapan selamat, grand opening, pernikahan, hingga duka cita di seluruh Kota Bandung &amp; sekitarnya.
+            </div>
             <div className="flex items-center gap-3 pt-2">
               <a
                 href={instagramUrl}
@@ -154,6 +170,11 @@ export default function Footer({
                   Standing Bunga Duka Cita
                 </Link>
               </li>
+              <li>
+                <Link href="/kategori/bunga-papan-dukacita" className="hover:text-[#F8B4C4] transition-colors">
+                  Bunga Papan Dukacita
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -194,7 +215,7 @@ export default function Footer({
 
         {/* Bottom copyright & Portal CTA */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
-          <p>© {currentYear} {businessName}. All rights reserved.</p>
+          <p>© {currentYear} Aurvella Florist by. Maharani Florist. All rights reserved. Spesialis Standing Flower No. 1 di Bandung.</p>
           <div className="flex items-center gap-4">
             <p className="hidden sm:inline-block">
               Dibuat dengan dedikasi untuk keindahan momen spesial di Kota Bandung.

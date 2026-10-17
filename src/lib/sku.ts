@@ -7,6 +7,7 @@ const CATEGORY_PREFIX_MAP: Record<string, string> = {
   'standing-vpc': 'PVC',
   'standing-fresh': 'FRE',
   'standing-duka-cita': 'DUK',
+  'bunga-papan-dukacita': 'BPD',
 };
 
 function generateRandomSuffix(length: number = 4): string {

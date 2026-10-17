@@ -23,6 +23,64 @@ export interface HeroProductItem {
   description?: string | null;
 }
 
+const DEFAULT_HERO_PRODUCTS: HeroProductItem[] = [
+  {
+    name: 'Standing Acrylic - Floral Symphony Pink (800K)',
+    slug: 'standing-acrylic-floral-symphony-pink-800k',
+    sku: 'ACR-20261017-0001',
+    normalPrice: 800000,
+    promoPrice: 750000,
+    isPromo: true,
+    imageUrl: '/products/Standing Acrylik Artificial/800k.jpg',
+    categoryName: 'Standing Acrylic',
+    description: 'Standing flower papan acrylic mewah dengan kombinasi warna soft pink dan bunga artificial impor premium.',
+  },
+  {
+    name: 'Standing Cermin - Mirror Royal Arch (850K)',
+    slug: 'standing-cermin-mirror-royal-arch-850k',
+    sku: 'MIR-20261017-0001',
+    normalPrice: 850000,
+    promoPrice: null,
+    isPromo: false,
+    imageUrl: '/products/Standing Cermin-Miror Artificial/850k.jpg',
+    categoryName: 'Standing Cermin',
+    description: 'Standing mirror wedding mewah dengan ukiran bunga artistik elegan untuk momen teristimewa.',
+  },
+  {
+    name: 'Standing PVC - Lavender Dream Chic (550K)',
+    slug: 'standing-pvc-lavender-dream-chic-550k',
+    sku: 'PVC-20261017-0001',
+    normalPrice: 550000,
+    promoPrice: null,
+    isPromo: false,
+    imageUrl: '/products/Standing Flower PVC Artificial/Standing PVC Artificial 550K.jpg',
+    categoryName: 'Standing PVC',
+    description: 'Papan standing PVC modern untuk grand opening dan ucapan selamat & sukses di Bandung.',
+  },
+  {
+    name: 'Standing Fresh - Imperial Masterpiece Stand (850K)',
+    slug: 'standing-fresh-imperial-masterpiece-stand-850k',
+    sku: 'FRS-20261017-0001',
+    normalPrice: 850000,
+    promoPrice: 799000,
+    isPromo: true,
+    imageUrl: '/products/Standing Flower Fresh/850k.jpg',
+    categoryName: 'Standing Fresh',
+    description: 'Rangkaian bunga segar asli pilihan dengan keharuman alami dan tampilan berkelas.',
+  },
+  {
+    name: 'Bunga Papan Dukacita 2x1m - Graceful Tribute (500K)',
+    slug: 'bunga-papan-dukacita-2x1m-graceful-tribute-500k',
+    sku: 'BPD-20261017-0001',
+    normalPrice: 500000,
+    promoPrice: null,
+    isPromo: false,
+    imageUrl: '/products/Bunga Papan Dukacita/Dukacita 2x1 meter 500k (2).jpg',
+    categoryName: 'Bunga Papan Dukacita',
+    description: 'Karangan bunga papan duka cita khidmat dengan ukuran 2x1 meter untuk penghormatan terbaik.',
+  },
+];
+
 interface HeroBannerProps {
   whatsappNumber?: string;
   heroProducts?: HeroProductItem[];
@@ -48,7 +106,7 @@ export default function HeroBanner({
   const cardPromoRef = useRef<HTMLDivElement>(null);
   const slideCardRef = useRef<HTMLDivElement>(null);
 
-  // Normalize products list: combine heroProducts or fallback to promoProduct
+  // Normalize products list: combine heroProducts or fallback to promoProduct or default curated items
   const productsList: HeroProductItem[] = React.useMemo(() => {
     if (heroProducts && heroProducts.length > 0) {
       return heroProducts;
@@ -62,78 +120,113 @@ export default function HeroBanner({
           sku: promoProduct.sku,
           isPromo: true,
           promoEnd: promoProduct.promoEnd,
-          imageUrl: promoProduct.imageUrl || '/images/categories/standing-acrylic.png',
-          slug: promoProduct.slug || 'promo-standing-flower',
+          imageUrl: promoProduct.imageUrl || '/products/Standing Acrylik Artificial/800k.jpg',
+          slug: promoProduct.slug || 'standing-acrylic-floral-symphony-pink-800k',
         },
       ];
     }
-    return [];
+    return DEFAULT_HERO_PRODUCTS;
   }, [heroProducts, promoProduct]);
 
-  // Current Slide Index
+  const totalSlides = productsList.length;
+
+  // Current Slide Index with safe circular wrap
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  const activeProduct = productsList[currentIndex] || null;
+  const safeIndex = totalSlides > 0 ? ((currentIndex % totalSlides) + totalSlides) % totalSlides : 0;
+  const activeProduct = productsList[safeIndex] || productsList[0];
 
-  // Auto-play slider every 5 seconds (pauses when user hovers)
+  // Auto-play slider every 5 seconds (pauses when user hovers or interacts)
   useEffect(() => {
-    if (productsList.length <= 1 || isPaused) return;
+    if (totalSlides <= 1 || isPaused) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % productsList.length);
+      setCurrentIndex((prev) => (prev + 1) % totalSlides);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [productsList.length, isPaused]);
+  }, [totalSlides, isPaused]);
 
-  // Animate slide change
+  // Smooth slide change with guaranteed clearProps to prevent opacity loss
   useEffect(() => {
     if (slideCardRef.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       gsap.fromTo(
         slideCardRef.current,
-        { opacity: 0.4, scale: 0.98 },
-        { opacity: 1, scale: 1, duration: 0.45, ease: 'power2.out' }
+        { opacity: 0.65, scale: 0.985 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.35,
+          ease: 'power2.out',
+          clearProps: 'opacity,transform',
+        }
       );
     }
-  }, [currentIndex]);
+  }, [safeIndex]);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev === 0 ? productsList.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev <= 0 ? totalSlides - 1 : prev - 1));
   };
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % productsList.length);
+    setCurrentIndex((prev) => (prev + 1) % totalSlides);
   };
 
   useGSAP(
     () => {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         return;
       }
 
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-
-      tl.from(textRef.current?.querySelectorAll('.gsap-fade-in') || [], {
-        y: 32,
-        opacity: 0,
-        stagger: 0.14,
-        duration: 0.9,
+      const tl = gsap.timeline({
+        defaults: { ease: 'power2.out' },
+        onComplete: () => {
+          // Double ensure all elements have inline styles cleared so nothing stays hidden
+          if (textRef.current) {
+            gsap.set(textRef.current.querySelectorAll('.gsap-fade-in'), { clearProps: 'opacity,transform' });
+          }
+          if (cardPromoRef.current) {
+            gsap.set(cardPromoRef.current, { clearProps: 'opacity,transform' });
+          }
+          if (slideCardRef.current) {
+            gsap.set(slideCardRef.current, { clearProps: 'opacity,transform' });
+          }
+        },
       });
 
+      if (textRef.current) {
+        const fadeElements = textRef.current.querySelectorAll('.gsap-fade-in');
+        if (fadeElements.length > 0) {
+          tl.fromTo(
+            fadeElements,
+            { y: 24, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              stagger: 0.08,
+              duration: 0.65,
+              clearProps: 'opacity,transform',
+            }
+          );
+        }
+      }
+
       if (cardPromoRef.current) {
-        tl.from(
+        tl.fromTo(
           cardPromoRef.current,
+          { scale: 0.96, opacity: 0, y: 16 },
           {
-            scale: 0.9,
-            opacity: 0,
-            y: 20,
-            duration: 0.8,
-            ease: 'back.out(1.7)',
+            scale: 1,
+            opacity: 1,
+            y: 0,
+            duration: 0.65,
+            ease: 'back.out(1.4)',
+            clearProps: 'opacity,transform',
           },
-          '-=0.4'
+          '-=0.3'
         );
       }
 
@@ -193,6 +286,18 @@ export default function HeroBanner({
           });
         });
       }
+
+      return () => {
+        if (textRef.current) {
+          gsap.set(textRef.current.querySelectorAll('.gsap-fade-in'), { clearProps: 'opacity,transform' });
+        }
+        if (cardPromoRef.current) {
+          gsap.set(cardPromoRef.current, { clearProps: 'opacity,transform' });
+        }
+        if (slideCardRef.current) {
+          gsap.set(slideCardRef.current, { clearProps: 'opacity,transform' });
+        }
+      };
     },
     { scope: containerRef }
   );
@@ -312,9 +417,13 @@ export default function HeroBanner({
             className={`space-y-6 ${productsList.length > 0 ? 'lg:col-span-8' : 'lg:col-span-12 text-center max-w-3xl mx-auto'}`}
           >
             {/* Tagline Badge */}
-            <div className={`gsap-fade-in inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#FDE2E8] text-xs uppercase tracking-widest font-semibold shadow-lg ${productsList.length > 0 ? '' : 'mx-auto'}`}>
+            <div className={`gsap-fade-in inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[#FDE2E8] text-xs uppercase tracking-wider font-semibold shadow-lg ${productsList.length > 0 ? '' : 'mx-auto'}`}>
               <Sparkles className="w-3.5 h-3.5 text-[#DFB758] animate-pulse" />
-              <span>STANDING FLOWER NO. 1 DI BANDUNG</span>
+              <span className="font-bold text-white">Aurvella Florist</span>
+              <span className="text-[#DFB758] font-semibold lowercase">by.</span>
+              <span className="font-bold text-[#FDE8ED]">Maharani Florist</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#DFB758]" />
+              <span className="text-[#DFB758] font-bold text-[11px]">SPESIALIS NO. 1 DI BANDUNG</span>
             </div>
 
             {/* Main Headline */}
@@ -328,7 +437,7 @@ export default function HeroBanner({
 
             {/* Description */}
             <p className="gsap-fade-in text-sm sm:text-lg text-white/90 leading-relaxed font-light drop-shadow max-w-2xl">
-              Rangkaian standing flower berkelas untuk perayaan akbar, grand opening toko, resepsi pernikahan, anniversary, ucapan selamat &amp; sukses, hingga ungkapan belasungkawa khidmat. Dibuat rapi oleh florist berpengalaman dengan garansi bunga sampai segar dan tepat waktu.
+              <strong>Aurvella Florist by. Maharani Florist</strong> menghadirkan koleksi terlengkap standing flower akrilik, standing cermin wedding, papan PVC modern, bunga segar asli, hingga bunga papan duka cita. Tetap mengutamakan komitmen sebagai spesialis standing flower terbaik dengan garansi bunga sampai segar, rapi, dan tepat waktu di seluruh Kota Bandung.
             </p>
 
             {/* Service Highlights Pills */}
@@ -391,10 +500,10 @@ export default function HeroBanner({
                   </div>
 
                   {/* Slider Prev / Next Controls if multiple products */}
-                  {productsList.length > 1 && (
+                  {totalSlides > 1 && (
                     <div className="flex items-center gap-1">
                       <span className="text-[10px] font-bold text-gray-400 mr-1">
-                        {currentIndex + 1}/{productsList.length}
+                        {safeIndex + 1}/{totalSlides}
                       </span>
                       <button
                         onClick={handlePrev}
@@ -415,11 +524,15 @@ export default function HeroBanner({
                 </div>
 
                 {/* Animated Slide Content */}
-                <div ref={slideCardRef} className="transition-all">
+                <div
+                  ref={slideCardRef}
+                  key={`hero-slide-${activeProduct.sku || activeProduct.id || safeIndex}`}
+                  className="transition-all"
+                >
                   {/* Image Container */}
                   <div className="relative aspect-video w-full rounded-2xl overflow-hidden my-3 border border-[#F5E6EA] bg-[#FAF8F8]">
                     <Image
-                      src={activeProduct.imageUrl || '/images/categories/standing-acrylic.png'}
+                      src={activeProduct.imageUrl || '/products/Standing Acrylik Artificial/800k.jpg'}
                       alt={activeProduct.name}
                       fill
                       className="object-cover transition-transform duration-500 hover:scale-105"
@@ -496,7 +609,7 @@ export default function HeroBanner({
                 </div>
 
                 {/* Slider Pagination Dots if multiple products */}
-                {productsList.length > 1 && (
+                {totalSlides > 1 && (
                   <div className="flex items-center justify-center gap-1.5 pt-3 mt-2 border-t border-[#F5E6EA]">
                     {productsList.map((_, dotIdx) => (
                       <button
@@ -504,7 +617,7 @@ export default function HeroBanner({
                         type="button"
                         onClick={() => setCurrentIndex(dotIdx)}
                         className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                          currentIndex === dotIdx
+                          safeIndex === dotIdx
                             ? 'w-6 bg-[#B83253]'
                             : 'w-2 bg-gray-200 hover:bg-gray-300'
                         }`}

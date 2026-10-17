@@ -202,9 +202,19 @@ export default async function ProductDetailPage({
                   </span>
                 </div>
 
-                {/* Info Penjualan Terbanyak */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0F4] text-[#B83253] border border-[#F8B4C4] font-bold shadow-xs">
-                  <span>🔥 Terjual {product.totalSold > 0 ? product.totalSold : 15}+ Rangkaian</span>
+                {/* Info Penjualan */}
+                <div
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs ${
+                    (product.totalSold || 0) > 0
+                      ? 'bg-[#FFF0F4] text-[#B83253] border border-[#F8B4C4]'
+                      : 'bg-[#FAF3F5] text-[#7A6D72] border border-[#E8D9DC]'
+                  }`}
+                >
+                  <span>
+                    {(product.totalSold || 0) > 0
+                      ? `🔥 Terjual ${product.totalSold} Rangkaian`
+                      : `Terjual ${product.totalSold || 0} Rangkaian`}
+                  </span>
                 </div>
               </div>
 

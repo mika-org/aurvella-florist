@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
         description: data.description || null,
         specifications: data.specifications || null,
         order: data.order,
+        totalSold: data.totalSold ?? 0,
         seoTitle: data.seoTitle || null,
         seoDescription: data.seoDescription || null,
         images: {

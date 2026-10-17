@@ -136,8 +136,14 @@ export default function ProductCard({
               )}
             </div>
 
-            <span className="text-[9px] sm:text-[10px] text-[#7A6D72] font-semibold whitespace-nowrap bg-[#FAF3F5] px-1.5 sm:px-2 py-0.5 rounded-full shrink-0">
-              Terjual {product.totalSold !== undefined && product.totalSold > 0 ? product.totalSold : 12}+
+            <span
+              className={`text-[9px] sm:text-[10px] font-semibold whitespace-nowrap px-1.5 sm:px-2 py-0.5 rounded-full shrink-0 transition-colors ${
+                (product.totalSold || 0) > 0
+                  ? 'bg-[#FFF0F4] text-[#B83253] border border-[#F8B4C4]/60 font-bold shadow-xs'
+                  : 'bg-[#FAF3F5] text-[#7A6D72]'
+              }`}
+            >
+              Terjual {product.totalSold || 0}
             </span>
           </div>
         </div>

@@ -58,8 +58,9 @@ export default async function HomePage() {
 
   const whatsappNumber = settingsMap.whatsapp_international || '6285770187018';
 
-  // Format products for hero slider
-  const heroProducts = heroProductsRaw.map((p) => ({
+  // Format products for hero slider (fallback to products if hero is empty so it never disappears)
+  const heroSource = heroProductsRaw.length > 0 ? heroProductsRaw : products.slice(0, 6);
+  const heroProducts = heroSource.map((p) => ({
     id: p.id,
     name: p.name,
     slug: p.slug,
@@ -99,12 +100,14 @@ export default async function HomePage() {
       {/* 2. Pilih Kategori */}
       <CategorySection categories={serializedCategories} />
 
-      {/* 3. Produk Unggulan */}
+      {/* 3. Produk Pilihan & Unggulan (Ditutup sementara sesuai permintaan) */}
+      {/*
       <FeaturedProducts
         products={serializedProducts}
         categories={serializedCategories}
         whatsappNumber={whatsappNumber}
       />
+      */}
 
       {/* 4. Informasi Layanan */}
       <ServiceInfo

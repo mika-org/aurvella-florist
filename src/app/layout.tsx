@@ -15,25 +15,27 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Aurvella Florist - Spesialis Standing Flower Bandung | Fresh & Artificial',
+  title: 'Aurvella Florist by. Maharani Florist - Spesialis Standing Flower No. 1 Bandung',
   description:
-    'Pusat standing flower nomor satu di Bandung untuk grand opening, wedding, anniversary, dan duka cita. Tersedia akrilik, cermin, PVC, dan bunga segar. Free ongkir Bandung & Same Day Delivery.',
+    'Aurvella Florist by. Maharani Florist: Spesialis standing flower no. 1 di Bandung & katalog karangan bunga lengkap. Standing akrilik, cermin, PVC, bunga segar, & bunga papan duka cita. Free ongkir & same day delivery.',
   keywords: [
+    'aurvella florist',
+    'maharani florist',
+    'aurvella florist by maharani florist',
     'standing flower bandung',
     'florist bandung',
     'standing acrylic bandung',
     'standing cermin wedding',
-    'bunga papan bandung',
+    'bunga papan duka cita bandung',
     'bunga grand opening bandung',
-    'aurvella florist',
   ],
-  authors: [{ name: 'Aurvella Florist' }],
+  authors: [{ name: 'Aurvella Florist by. Maharani Florist' }],
   openGraph: {
-    title: 'Aurvella Florist Bandung - Standing Flower Elegan & Mewah',
-    description: 'Spesialis standing flower akrilik, cermin, PVC & fresh flower di Bandung. Free Ongkir & Same Day Delivery.',
+    title: 'Aurvella Florist by. Maharani Florist - Spesialis Standing Flower Bandung',
+    description: 'Spesialis standing flower akrilik, cermin, PVC, fresh flower & bunga papan di Bandung. Free Ongkir & Same Day Delivery.',
     type: 'website',
     locale: 'id_ID',
-    siteName: 'Aurvella Florist Bandung',
+    siteName: 'Aurvella Florist by. Maharani Florist',
   },
   icons: {
     icon: '/logo.png',

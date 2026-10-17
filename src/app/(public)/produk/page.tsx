@@ -77,16 +77,16 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     <div className="py-12 bg-[#FAF8F8] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Breadcrumbs */}
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="text-xs uppercase tracking-widest text-[#B83253] font-bold inline-flex items-center gap-1.5">
+        <div className="text-center max-w-3xl mx-auto mb-10">
+          <span className="text-xs uppercase tracking-widest text-[#B83253] font-bold inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0F4] border border-[#F8B4C4]/70 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[#DFB758]" />
-            Koleksi Terlengkap
+            Aurvella Florist by. Maharani Florist
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#2D2527] mt-2 mb-3">
-            Katalog Standing Flower Bandung
+            Katalog Karangan Bunga &amp; Standing Flower Bandung
           </h1>
-          <p className="text-sm text-[#6B5E63] leading-relaxed">
-            Temukan desain standing flower terbaik untuk ucapan selamat, peresmian gedung, wedding welcome mirror, hingga belasungkawa.
+          <p className="text-sm text-[#6B5E63] leading-relaxed max-w-2xl mx-auto">
+            Koleksi terlengkap mulai dari Spesialis Standing Flower No. 1 di Bandung hingga Bunga Papan Dukacita resmi, dipersembahkan oleh Aurvella Florist cabang dari Maharani Florist.
           </p>
         </div>
 
