@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Phone, Eye, Tag } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { formatRupiah, buildWhatsAppLink } from '@/lib/utils';
 import PromoCountdown from '@/components/ui/PromoCountdown';
 
@@ -12,8 +13,8 @@ export interface ProductCardData {
   sku: string;
   name: string;
   slug: string;
-  price: number | any;
-  promoPrice?: number | any | null;
+  price: number | string;
+  promoPrice?: number | string | null;
   isPromo: boolean;
   promoEnd?: Date | string | null;
   totalSold?: number;
@@ -56,7 +57,10 @@ export default function ProductCard({
   const waUrl = buildWhatsAppLink(whatsappNumber, product.name, product.sku);
 
   return (
-    <div className="group rounded-2xl bg-white border border-[#EFE5E8] overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <motion.div
+      whileHover={{ y: -5, transition: { duration: 0.25, ease: 'easeOut' } }}
+      className="group rounded-2xl bg-white border border-[#EFE5E8] overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-xl transition-shadow duration-300"
+    >
       <div>
         {/* Thumbnail Container */}
         <div className="relative aspect-square w-full overflow-hidden bg-[#FAF6F8]">
@@ -64,7 +68,7 @@ export default function ProductCard({
             src={imageUrl}
             alt={product.images?.[0]?.alt || product.name}
             fill
-            className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            className="object-cover object-center group-hover:scale-106 transition-transform duration-500 ease-out"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
 
@@ -107,13 +111,13 @@ export default function ProductCard({
           {product.category && (
             <Link
               href={`/kategori/${product.category.slug}`}
-              className="text-[10px] sm:text-[11px] uppercase tracking-wider text-[#B89223] font-semibold hover:underline block truncate"
+              className="text-[10px] sm:text-[11px] uppercase tracking-wider text-[#8E6D14] font-bold hover:underline block truncate"
             >
               {product.category.name}
             </Link>
           )}
 
-          <h3 className="font-serif font-bold text-base sm:text-lg text-[#2D2527] group-hover:text-[#B83253] transition-colors mt-1 line-clamp-1">
+          <h3 className="font-bold text-base sm:text-lg text-[#2D2527] group-hover:text-[#B83253] transition-colors mt-1 line-clamp-1">
             <Link href={productUrl}>{product.name}</Link>
           </h3>
 
@@ -125,7 +129,7 @@ export default function ProductCard({
                   <span className="text-base sm:text-xl font-extrabold text-[#B83253]">
                     {formatRupiah(promoPrice)}
                   </span>
-                  <span className="text-[11px] sm:text-xs text-[#8A7E82] line-through">
+                  <span className="text-[11px] sm:text-xs text-[#6B5E63] line-through font-medium">
                     {formatRupiah(normalPrice)}
                   </span>
                 </>
@@ -153,12 +157,13 @@ export default function ProductCard({
       <div className="px-3.5 pb-3.5 sm:px-5 sm:pb-5 pt-0 grid grid-cols-2 gap-1.5 sm:gap-2">
         <Link
           href={productUrl}
-          className="inline-flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs font-semibold text-[#4A3E42] bg-[#FAF3F5] hover:bg-[#F5E6EB] transition-colors cursor-pointer text-center"
+          className="inline-flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs font-semibold text-[#4A3E42] bg-[#FAF3F5] hover:bg-[#F5E6EB] transition-colors cursor-pointer text-center active:scale-97"
         >
           <Eye className="w-3.5 h-3.5 text-[#B83253] shrink-0" />
           <span className="truncate">Detail</span>
         </Link>
-        <a
+        <motion.a
+          whileTap={{ scale: 0.96 }}
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -166,8 +171,8 @@ export default function ProductCard({
         >
           <Phone className="w-3.5 h-3.5 fill-white shrink-0" />
           <span className="truncate">Pesan WA</span>
-        </a>
+        </motion.a>
       </div>
-    </div>
+    </motion.div>
   );
 }

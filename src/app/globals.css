@@ -1,7 +1,15 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-sans), "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-heading), "Playfair Display", Georgia, serif;
+  --font-serif: var(--font-heading), "Playfair Display", Georgia, serif;
+}
+
 @layer base {
   :root {
+    --font-heading: var(--font-heading), "Playfair Display", Georgia, serif;
+    --font-body: var(--font-sans), "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
     --color-blush-50: #FFF5F7;
     --color-blush-100: #FDE8ED;
     --color-blush-200: #FBD0DA;
@@ -20,6 +28,17 @@
     --color-surface: #FFFFFF;
     --color-text-main: #2D2527;
     --color-text-muted: #6B5E63;
+  }
+
+  /* Headings according to Panduan Tipografi */
+  h1, h2, h3, h4, .font-heading {
+    font-family: var(--font-heading);
+    letter-spacing: 0.01em;
+  }
+
+  /* Body & Elements according to Panduan Tipografi */
+  body, p, button, input, select, .font-body {
+    font-family: var(--font-body);
   }
 }
 

@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Menu, X, Phone, Sparkles, Flower2, ExternalLink } from 'lucide-react';
+import { Menu, X, Phone, Sparkles, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
   businessName?: string;
@@ -22,26 +23,30 @@ export default function Navbar({
         <div className="flex items-center justify-between h-20">
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="relative w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#F8B4C4]/70 group-hover:scale-105 transition-transform shrink-0 p-0.5">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#F8B4C4]/70 transition-transform shrink-0 p-0.5"
+            >
               <Image
                 src="/logo.png"
                 alt={`${businessName} Logo`}
                 fill
-                priority
+                loading="eager"
                 className="object-contain"
                 sizes="48px"
               />
-            </div>
+            </motion.div>
             <div>
               <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#2D2527] group-hover:text-[#B83253] transition-colors leading-tight">
+                <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#2D2527] group-hover:text-[#B83253] transition-colors leading-tight">
                   Aurvella Florist
                 </span>
                 <span className="text-[11px] sm:text-xs font-semibold text-[#B83253] italic">
                   by. Maharani Florist
                 </span>
               </div>
-              <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider text-[#B89223] font-bold">
+              <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider text-[#8E6D14] font-extrabold">
                 SPESIALIS STANDING FLOWER NO. 1 DI BANDUNG
               </span>
             </div>
@@ -79,26 +84,30 @@ export default function Navbar({
             >
               Kontak
             </Link>
-            <Link
-              href="/link"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FFF5F7] text-[#B83253] border border-[#F8B4C4] hover:bg-[#FDE2E8] transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-              Link Tree
-            </Link>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                href="/link"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FFF5F7] text-[#B83253] border border-[#F8B4C4] hover:bg-[#FDE2E8] transition-colors"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                Link Tree
+              </Link>
+            </motion.div>
           </nav>
 
           {/* Desktop Right CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <a
+            <motion.a
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               href={`https://wa.me/${whatsappNumber}?text=Halo%20Aurvella%20Florist,%20saya%20ingin%20konsultasi%20pemesanan%20standing%20flower`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:opacity-95 shadow-md shadow-[#25D366]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:opacity-95 shadow-md shadow-[#25D366]/20 transition-all cursor-pointer"
             >
               <Phone className="w-4 h-4 fill-white" />
               Chat WhatsApp
-            </a>
+            </motion.a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -115,7 +124,7 @@ export default function Navbar({
             <button
               type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg text-[#2D2527] hover:bg-[#FDE2E8] focus:outline-none"
+              className="p-2 rounded-lg text-[#2D2527] hover:bg-[#FDE2E8] focus:outline-none cursor-pointer"
               aria-label="Menu"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -124,68 +133,76 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {isOpen && (
-        <div className="md:hidden border-t border-[#F5E6EA] bg-white px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top-2">
-          <Link
-            href="/"
-            onClick={() => setIsOpen(false)}
-            className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
+      {/* Mobile Drawer with Framer Motion AnimatePresence */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="md:hidden overflow-hidden border-t border-[#F5E6EA] bg-white px-4 pt-3 pb-6 space-y-3"
           >
-            Beranda
-          </Link>
-          <Link
-            href="/produk"
-            onClick={() => setIsOpen(false)}
-            className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
-          >
-            Katalog Produk
-          </Link>
-          <Link
-            href="/#kategori"
-            onClick={() => setIsOpen(false)}
-            className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
-          >
-            Kategori
-          </Link>
-          <Link
-            href="/#testimoni"
-            onClick={() => setIsOpen(false)}
-            className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
-          >
-            Testimoni
-          </Link>
-          <Link
-            href="/kontak"
-            onClick={() => setIsOpen(false)}
-            className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
-          >
-            Kontak
-          </Link>
-          <Link
-            href="/link"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center justify-between px-3 py-2 rounded-md font-medium text-[#B83253] bg-[#FFF5F7]"
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-              Link Tree Bisnis
-            </span>
-            <ExternalLink className="w-4 h-4" />
-          </Link>
-          <div className="pt-2">
-            <a
-              href={`https://wa.me/${whatsappNumber}?text=Halo%20Aurvella%20Florist,%20saya%20ingin%20konsultasi%20pemesanan`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-full text-sm font-semibold text-white bg-[#25D366] shadow"
+            <Link
+              href="/"
+              onClick={() => setIsOpen(false)}
+              className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
             >
-              <Phone className="w-4 h-4" />
-              Chat WhatsApp (0857-7018-7018)
-            </a>
-          </div>
-        </div>
-      )}
+              Beranda
+            </Link>
+            <Link
+              href="/produk"
+              onClick={() => setIsOpen(false)}
+              className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
+            >
+              Katalog Produk
+            </Link>
+            <Link
+              href="/#kategori"
+              onClick={() => setIsOpen(false)}
+              className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
+            >
+              Kategori
+            </Link>
+            <Link
+              href="/#testimoni"
+              onClick={() => setIsOpen(false)}
+              className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
+            >
+              Testimoni
+            </Link>
+            <Link
+              href="/kontak"
+              onClick={() => setIsOpen(false)}
+              className="block px-3 py-2 rounded-md font-medium text-[#2D2527] hover:bg-[#FFF5F7] hover:text-[#B83253]"
+            >
+              Kontak
+            </Link>
+            <Link
+              href="/link"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center justify-between px-3 py-2 rounded-md font-medium text-[#B83253] bg-[#FFF5F7]"
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                Link Tree Bisnis
+              </span>
+              <ExternalLink className="w-4 h-4" />
+            </Link>
+            <div className="pt-2">
+              <a
+                href={`https://wa.me/${whatsappNumber}?text=Halo%20Aurvella%20Florist,%20saya%20ingin%20konsultasi%20pemesanan`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-full text-sm font-semibold text-white bg-[#25D366] shadow"
+              >
+                <Phone className="w-4 h-4" />
+                Chat WhatsApp (0857-7018-7018)
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

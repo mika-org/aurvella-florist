@@ -6,9 +6,20 @@ import GoogleMapsSection from '@/components/sections/GoogleMapsSection';
 
 
 export const metadata: Metadata = {
-  title: 'Kontak & Lokasi Workshop - Aurvella Florist Bandung',
+  title: 'Kontak & Lokasi Workshop Florist Bandung | Aurvella Florist',
   description:
-    'Hubungi Aurvella Florist Bandung via WhatsApp 24 Jam 0857-7018-7018 atau kunjungi workshop kami di Jl. Jamrud Arcamanik Bandung.',
+    'Hubungi Customer Service Aurvella Florist Bandung via WhatsApp 24 Jam 0857-7018-7018 untuk konsultasi dan pemesanan standing flower kilat. Kunjungi workshop resmi di Jl. Jamrud No.16 Arcamanik, Kota Bandung.',
+  alternates: {
+    canonical: '/kontak',
+  },
+  openGraph: {
+    title: 'Kontak & Lokasi Workshop - Aurvella Florist Bandung',
+    description:
+      'Konsultasi 24 jam & pemesanan standing flower kilat same day delivery ke seluruh Kota Bandung.',
+    url: 'https://aurvellaflorist.com/kontak',
+    type: 'website',
+    images: ['/images/hero-banner-2.png'],
+  },
 };
 
 export default async function ContactPage() {

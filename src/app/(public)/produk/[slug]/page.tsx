@@ -4,9 +4,14 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
-import { formatRupiah, buildWhatsAppLink } from '@/lib/utils';
+import { buildWhatsAppLink } from '@/lib/utils';
 import ProductCard from '@/components/products/ProductCard';
 import ProductDetailPricing from '@/components/products/ProductDetailPricing';
+
+function checkIsPromoExpired(promoEnd?: Date | string | null): boolean {
+  if (!promoEnd) return false;
+  return new Date(promoEnd).getTime() <= Date.now();
+}
 import {
   Phone,
   ShieldCheck,
@@ -27,19 +32,49 @@ export async function generateMetadata({
   params,
 }: ProductDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aurvellaflorist.com';
   const product = await prisma.product.findUnique({
     where: { slug },
-    include: { category: true },
+    include: { category: true, images: { take: 1 } },
   });
 
   if (!product) return { title: 'Produk Tidak Ditemukan - Aurvella Florist' };
 
+  const title = `${product.seoTitle || product.name} - Standing Flower Bandung | Aurvella Florist`;
+  const description =
+    product.seoDescription ||
+    product.description ||
+    `Pesan ${product.name} (SKU: ${product.sku}) di Aurvella Florist Bandung. Spesialis standing flower no. 1 di Bandung dengan jaminan bunga segar & free ongkir.`;
+  const imageUrl = product.images[0]?.url || `${siteUrl}/images/hero-banner-2.png`;
+
   return {
-    title: `${product.seoTitle || product.name} - Aurvella Florist Bandung`,
-    description:
-      product.seoDescription ||
-      product.description ||
-      `Pesan ${product.name} (SKU: ${product.sku}) di Aurvella Florist Bandung. Gratis ongkir & pemesanan cepat.`,
+    title,
+    description,
+    alternates: {
+      canonical: `/produk/${product.slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${siteUrl}/produk/${product.slug}`,
+      siteName: 'Aurvella Florist Bandung',
+      locale: 'id_ID',
+      type: 'website',
+      images: [
+        {
+          url: imageUrl,
+          width: 800,
+          height: 800,
+          alt: product.name,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 
@@ -89,24 +124,91 @@ export default async function ProductDetailPage({
 
   const normalPrice = Number(product.price);
   const promoPrice = product.promoPrice ? Number(product.promoPrice) : null;
-  const isPromoExpired = product.promoEnd
-    ? new Date(product.promoEnd).getTime() <= Date.now()
-    : false;
+  const isPromoExpired = checkIsPromoExpired(product.promoEnd);
   const hasValidPromo =
     product.isPromo && promoPrice !== null && promoPrice < normalPrice && !isPromoExpired;
 
   const primaryImage =
     product.images[0]?.url || '/images/categories/standing-acrylic.png';
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aurvellaflorist.com';
+
   const waLink = buildWhatsAppLink(
     whatsappNumber,
     product.name,
     product.sku,
-    `https://aurvellaflorist.com/produk/${product.slug}`
+    `${siteUrl}/produk/${product.slug}`
   );
+
+  const jsonLdProduct = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: product.images.map((i) => i.url),
+    description: product.description || product.seoDescription,
+    sku: product.sku,
+    category: product.category.name,
+    brand: {
+      '@type': 'Brand',
+      name: 'Aurvella Florist',
+    },
+    offers: {
+      '@type': 'Offer',
+      price: hasValidPromo && promoPrice ? promoPrice : normalPrice,
+      priceCurrency: 'IDR',
+      availability: 'https://schema.org/InStock',
+      url: `${siteUrl}/produk/${product.slug}`,
+      priceValidUntil: product.promoEnd ? new Date(product.promoEnd).toISOString().split('T')[0] : '2027-12-31',
+      seller: {
+        '@type': 'Florist',
+        name: 'Aurvella Florist by. Maharani Florist',
+      },
+    },
+  };
+
+  const jsonLdBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Beranda',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Katalog Produk',
+        item: `${siteUrl}/produk`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.category.name,
+        item: `${siteUrl}/kategori/${product.category.slug}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: product.name,
+        item: `${siteUrl}/produk/${product.slug}`,
+      },
+    ],
+  };
 
   return (
     <div className="py-10 bg-[#FAF8F8] min-h-screen">
+      {/* Product & Breadcrumb JSON-LD for Google Rich Results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdProduct) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Link */}
         <div className="mb-6">
@@ -123,7 +225,7 @@ export default async function ProductDetailPage({
         <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-lg border border-[#F0E4E7] grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Left: Gallery */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF6F8] border border-[#F4E6EB]">
+            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF8F8] border border-[#F4E6EB]">
               <Image
                 src={primaryImage}
                 alt={product.images[0]?.alt || product.name}
@@ -177,7 +279,7 @@ export default async function ProductDetailPage({
                 </span>
               </div>
 
-              <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#2D2527] leading-tight">
+              <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#2D2527] leading-tight tracking-wide">
                 {product.name}
               </h1>
 
@@ -220,7 +322,7 @@ export default async function ProductDetailPage({
 
               {/* Description */}
               <div className="mt-6">
-                <h2 className="font-serif font-bold text-base text-[#2D2527] mb-2">
+                <h2 className="font-bold text-base text-[#2D2527] mb-2">
                   Deskripsi Produk
                 </h2>
                 <p className="text-sm text-[#5C4D52] leading-relaxed whitespace-pre-line">
@@ -277,7 +379,7 @@ export default async function ProductDetailPage({
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-16">
-            <h2 className="font-serif text-2xl font-bold text-[#2D2527] mb-6">
+            <h2 className="text-2xl font-extrabold text-[#2D2527] mb-6 tracking-tight">
               Produk Terkait di Kategori {product.category.name}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

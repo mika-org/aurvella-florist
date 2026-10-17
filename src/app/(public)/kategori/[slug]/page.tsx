@@ -16,17 +16,47 @@ export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aurvellaflorist.com';
   const category = await prisma.category.findUnique({
     where: { slug },
   });
 
   if (!category) return { title: 'Kategori Tidak Ditemukan - Aurvella Florist' };
 
+  const title = `${category.name} Bandung - Spesialis Standing Flower | Aurvella Florist`;
+  const description =
+    category.description ||
+    `Koleksi ${category.name} eksklusif di Bandung dengan pengiriman cepat, jaminan bunga segar, dan gratis ongkir area Kota Bandung dan sekitarnya.`;
+  const imageUrl = category.image || `${siteUrl}/images/categories/standing-acrylic.png`;
+
   return {
-    title: `${category.name} Bandung - Aurvella Florist`,
-    description:
-      category.description ||
-      `Koleksi ${category.name} eksklusif di Bandung dengan pengiriman cepat dan gratis ongkir area Bandung.`,
+    title,
+    description,
+    alternates: {
+      canonical: `/kategori/${category.slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${siteUrl}/kategori/${category.slug}`,
+      siteName: 'Aurvella Florist Bandung',
+      locale: 'id_ID',
+      type: 'website',
+      images: [
+        {
+          url: imageUrl,
+          width: 800,
+          height: 800,
+          alt: `${category.name} Bandung - Aurvella Florist`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 
@@ -64,8 +94,60 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     promoEnd: p.promoEnd ? p.promoEnd.toISOString() : null,
   }));
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aurvellaflorist.com';
+
+  const jsonLdCategory = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${category.name} Bandung`,
+    description: category.description,
+    url: `${siteUrl}/kategori/${category.slug}`,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: category.products.map((p, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: `${siteUrl}/produk/${p.slug}`,
+        name: p.name,
+      })),
+    },
+  };
+
+  const jsonLdBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Beranda',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Kategori',
+        item: `${siteUrl}/#kategori`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: category.name,
+        item: `${siteUrl}/kategori/${category.slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="py-12 bg-[#FAF8F8] min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdCategory) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Link */}
         <div className="mb-6">
@@ -86,7 +168,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 <Sparkles className="w-3.5 h-3.5 text-[#DFB758]" />
                 Kategori Spesialis
               </span>
-              <h1 className="font-serif text-3xl sm:text-5xl font-bold text-[#2D2527]">
+              <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-[#2D2527] tracking-wide">
                 {category.name}
               </h1>
               <p className="text-sm sm:text-base text-[#6B5E63] leading-relaxed max-w-2xl">
@@ -119,7 +201,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
         {category.products.length === 0 && (
           <div className="text-center py-16 bg-white rounded-3xl border border-[#F3E2E6] shadow-sm max-w-md mx-auto">
-            <p className="font-serif text-base text-[#2D2527] font-semibold">
+            <p className="text-base text-[#2D2527] font-bold">
               Belum ada produk di kategori ini.
             </p>
             <p className="text-xs text-[#7A6D72] mt-2 mb-6">

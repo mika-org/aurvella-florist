@@ -10,8 +10,7 @@ import ContactSection from '@/components/sections/ContactSection';
 import GoogleMapsSection from '@/components/sections/GoogleMapsSection';
 
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
 
 export default async function HomePage() {
   const [categories, products, heroProductsRaw, testimonials, faqs, settings] = await Promise.all([

@@ -7,13 +7,19 @@ export const dynamic = 'force-dynamic';
 
 
 export const metadata: Metadata = {
-  title: 'Aurvella Florist - Official Links & Pricelist',
+  title: 'Official Bio Link & Pricelist PDF | Aurvella Florist Bandung',
   description:
-    'Akses seluruh tautan resmi Aurvella Florist Bandung: WhatsApp order, pricelist & katalog Google Drive, Shopee, Instagram, dan lokasi workshop.',
-  icons: {
-    icon: '/logo.png',
-    shortcut: '/logo.png',
-    apple: '/logo.png',
+    'Akses seluruh portal resmi Aurvella Florist Bandung: Chat WhatsApp 24 Jam, Download Pricelist PDF & Katalog Standing Flower Google Drive, Official Shopee & Instagram.',
+  alternates: {
+    canonical: '/link',
+  },
+  openGraph: {
+    title: 'Aurvella Florist - Official Links & Pricelist',
+    description:
+      'Pricelist katalog standing flower lengkap, chat WhatsApp order kilat, dan media sosial resmi.',
+    url: 'https://aurvellaflorist.com/link',
+    type: 'website',
+    images: ['/logo.png'],
   },
 };
 

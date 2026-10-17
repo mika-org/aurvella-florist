@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Truck, Clock, Headphones, Sparkles, ShieldCheck } from 'lucide-react';
+import { motion, type Variants } from 'framer-motion';
 
 interface ServiceInfoProps {
   freeOngkirInfo?: string;
@@ -45,49 +48,109 @@ export default function ServiceInfo({
     },
   ];
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 24, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 240,
+        damping: 20,
+      },
+    },
+  };
+
   return (
-    <section className="py-16 bg-white border-y border-[#F3E5E8]">
+    <section className="py-16 sm:py-20 bg-gradient-to-b from-white via-[#FCF9FA] to-white border-y border-[#F3E5E8] relative overflow-hidden">
+      {/* Decorative ambient background accents */}
+      <motion.div
+        animate={{ scale: [1, 1.1, 1], opacity: [0.12, 0.22, 0.12] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-gradient-to-r from-[#F8B4C4]/15 via-[#DFB758]/10 to-[#F8B4C4]/15 rounded-full blur-3xl pointer-events-none -z-10"
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-widest text-[#B83253] font-bold">
-            Keunggulan Layanan Kami
-          </span>
-          <h2 className="font-serif text-3xl font-bold text-[#2D2527] mt-2">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.55 }}
+          className="text-center max-w-2xl mx-auto mb-12 sm:mb-14"
+        >
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFF0F4] border border-[#F8B4C4] text-[#B83253] text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-3 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#B83253]" />
+            <span>Keunggulan Layanan Kami</span>
+          </div>
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-[#2D2527] mt-1 tracking-wide">
             Mengapa Memilih Aurvella Florist?
           </h2>
-          <p className="text-[#6B5E63] text-sm mt-2">
-            Standar pelayanan florist profesional dengan dedikasi penuh terhadap kualitas dan kepuasan Anda.
+          <div className="w-16 h-1 bg-gradient-to-r from-[#B83253] via-[#DFB758] to-[#B83253] mx-auto rounded-full my-3" />
+          <p className="text-[#6B5E63] text-xs sm:text-sm md:text-base leading-relaxed">
+            Standar pelayanan florist profesional dengan dedikasi penuh terhadap kualitas bunga, keindahan desain, dan kepuasan Anda di seluruh Kota Bandung.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 sm:gap-6"
+        >
           {services.map((item, idx) => {
             const Icon = item.icon;
             return (
-              <div
+              <motion.div
                 key={idx}
-                className="bg-[#FFF9FA] rounded-2xl p-6 border border-[#F8E1E7] hover:border-[#DFB758] transition-all hover:shadow-md flex flex-col justify-between group"
+                variants={itemVariants}
+                whileHover={{
+                  y: -8,
+                  scale: 1.02,
+                  boxShadow: '0 16px 32px -8px rgba(184, 50, 83, 0.14)',
+                  transition: { duration: 0.25 },
+                }}
+                className="bg-white rounded-2xl p-6 border border-[#F5E2E7] hover:border-[#DFB758]/80 transition-colors shadow-xs flex flex-col justify-between group cursor-default"
               >
                 <div>
-                  <div className="w-12 h-12 rounded-xl bg-white border border-[#F5D5DE] flex items-center justify-center text-[#B83253] group-hover:scale-110 group-hover:bg-[#B83253] group-hover:text-white transition-all shadow-sm mb-4">
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: [0, -6, 6, 0] }}
+                    transition={{ duration: 0.3 }}
+                    className="w-12 h-12 rounded-xl bg-[#FFF5F7] border border-[#F5D5DE] flex items-center justify-center text-[#B83253] group-hover:bg-[#B83253] group-hover:text-white transition-colors shadow-xs mb-4"
+                  >
                     <Icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-serif font-bold text-base text-[#2D2527] mb-2">
+                  </motion.div>
+                  <h3 className="font-bold text-base text-[#2D2527] group-hover:text-[#B83253] transition-colors mb-2">
                     {item.title}
                   </h3>
                   <p className="text-xs text-[#6B5E63] leading-relaxed">
                     {item.description}
                   </p>
                 </div>
-                <div className="pt-4 mt-4 border-t border-[#F5E2E7]">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FDE2E8] text-[#B83253]">
+                <div className="pt-4 mt-4 border-t border-[#F8E8EC] flex items-center justify-between">
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FFF0F4] text-[#B83253] border border-[#F8B4C4]/60">
                     {item.highlight}
                   </span>
+                  <span className="text-[10px] font-mono font-bold text-[#8E6D14]">
+                    #{String(idx + 1).padStart(2, '0')}
+                  </span>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

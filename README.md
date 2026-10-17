@@ -7,13 +7,13 @@ Website profesional untuk bisnis **Aurvella Florist** di Bandung yang menyediaka
 ## 🌸 Fitur Utama
 
 ### 1. Frontend Public
-- **Hero Banner Interaktif:** Menggunakan visual utama `hero-banner-2.jpg`, ornamen bunga melayang bertenaga **GSAP**, badge promo diskon, serta tombol CTA langsung.
-- **Section Pilih Kategori:** 5 Kategori wajib (*Standing Acrylic, Standing Cermin, Standing PVC, Standing Fresh, Standing Duka Cita*) dengan animasi interaktif GSAP saat diklik.
+- **Hero Banner Interaktif:** Menggunakan visual utama `hero-banner-2.jpg`, ornamen bunga melayang bertenaga **Framer Motion**, badge promo diskon, serta tombol CTA langsung.
+- **Section Pilih Kategori:** 5 Kategori wajib (*Standing Acrylic, Standing Cermin, Standing PVC, Standing Fresh, Standing Duka Cita*) dengan animasi interaktif Framer Motion saat diklik.
 - **Produk Unggulan & Filter:** Katalog pilihan dengan harga normal, harga promo (strikethrough), label promo aktif, dan tombol pesan via WhatsApp otomatis.
 - **Informasi Layanan 24/7 & Garansi:** Free Ongkir Bandung, Same Day Delivery, pelayanan 24/7, fresh & artificial flower, serta jaminan kualitas produk.
 - **Ulasan Testimoni Pelanggan:** Carousel ulasan yang telah diverifikasi dan disetujui admin (*wajib di atas kontak*).
 - **Kontak & Lokasi Workshop:** Nomor WhatsApp bisnis `085770187018`, formulir pesan pelanggan dengan validasi Zod & proteksi anti-spam honeypot, serta iframe embed Google Maps.
-- **Halaman Link Tree Eksklusif (`/link`):** Desain feminin lembut dengan animasi kupu-kupu dan kelopak bunga melayang GSAP, mendukung banyak tautan Google Drive pricelist/portofolio, marketplace, dan WhatsApp.
+- **Halaman Link Tree Eksklusif (`/link`):** Desain feminin lembut dengan animasi kupu-kupu dan kelopak bunga melayang bertenaga Framer Motion, mendukung banyak tautan Google Drive pricelist/portofolio, marketplace, dan WhatsApp.
 - **Halaman Detail Produk (`/produk/[slug]`):** SEO-friendly, galeri foto, SKU generator otomatis, spesifikasi material lengkap, dan direct WhatsApp order.
 
 ### 2. Admin Dashboard (`/admin`)
@@ -37,7 +37,7 @@ Website profesional untuk bisnis **Aurvella Florist** di Bandung yang menyediaka
 - **ORM:** Prisma ORM
 - **Validasi:** Zod & React Hook Form
 - **Styling:** Tailwind CSS
-- **Animasi:** GSAP & @gsap/react
+- **Animasi:** Framer Motion (`framer-motion`)
 - **Ikon:** Lucide React
 - **Autentikasi:** bcryptjs & jose (JWT)
 
@@ -101,7 +101,7 @@ Buka peramban di `http://localhost:3000`.
 | `/produk` | Katalog seluruh standing flower & filter kategori |
 | `/produk/[slug]` | Detail produk, spesifikasi, & pesan WhatsApp |
 | `/kategori/[slug]` | Daftar produk berdasarkan kategori terpilih |
-| `/link` | Halaman Link Tree bisnis dengan animasi GSAP |
+| `/link` | Halaman Link Tree bisnis dengan animasi Framer Motion |
 | `/kontak` | Informasi kontak, formulir pesan, & Google Maps |
 | `/admin/login` | Halaman login administrator |
 | `/admin` | Ringkasan metrik dashboard admin |

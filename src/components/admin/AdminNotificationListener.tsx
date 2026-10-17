@@ -1,8 +1,22 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bell, BellRing, MessageSquare, X, ArrowRight, Phone, Volume2 } from 'lucide-react';
+
+function getWhatsAppChatUrl(phone: string, name: string): string {
+  let cleaned = phone.replace(/[^0-9]/g, '');
+  if (cleaned.startsWith('0')) {
+    cleaned = '62' + cleaned.slice(1);
+  } else if (cleaned.startsWith('8')) {
+    cleaned = '62' + cleaned;
+  }
+  const text = encodeURIComponent(
+    `Halo ${name}, terima kasih telah menghubungi Aurvella Florist. Kami ingin menindaklanjuti pesan Anda.`
+  );
+  return `https://wa.me/${cleaned}?text=${text}`;
+}
 
 interface LatestMessage {
   id: string;
@@ -66,6 +80,44 @@ export default function AdminNotificationListener() {
     }
   };
 
+  // Helper to trigger alert (Toast + Chime + Desktop Notification)
+  const triggerAlert = (msg: LatestMessage) => {
+    if (lastKnownIdRef.current === msg.id) return;
+    lastKnownIdRef.current = msg.id;
+
+    try {
+      sessionStorage.setItem('aurvella_last_alerted_id', msg.id);
+    } catch {}
+
+    setActiveNotification(msg);
+    playNotificationSound();
+
+    // Trigger Desktop notification if permission granted
+    if (
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      Notification.permission === 'granted'
+    ) {
+      try {
+        const notification = new Notification(`Pesan Baru: ${msg.name}`, {
+          body: `${msg.subject} - "${msg.message.slice(0, 80)}"`,
+          icon: '/logo.png',
+          tag: msg.id,
+        });
+        notification.onclick = () => {
+          window.focus();
+          router.push('/admin/pesan');
+          router.refresh();
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('aurvella:refresh-messages'));
+          }
+        };
+      } catch (notifErr) {
+        console.error('Desktop notification error:', notifErr);
+      }
+    }
+  };
+
   // Check notification permission state
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -121,13 +173,45 @@ export default function AdminNotificationListener() {
     };
   }, []);
 
-  // Poll for new messages every 5 seconds
+  // Listen to BroadcastChannel and window events for immediate cross-tab notifications
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        bc = new BroadcastChannel('aurvella_notifications');
+        bc.onmessage = (event) => {
+          if (event.data?.type === 'NEW_MESSAGE' && event.data?.message) {
+            triggerAlert(event.data.message as LatestMessage);
+          }
+        };
+      } catch {}
+    }
+
+    const handleLocalMessage = (e: any) => {
+      if (e.detail?.message) {
+        triggerAlert(e.detail.message as LatestMessage);
+      }
+    };
+
+    window.addEventListener('aurvella:new-message', handleLocalMessage);
+
+    return () => {
+      if (bc) bc.close();
+      window.removeEventListener('aurvella:new-message', handleLocalMessage);
+    };
+  }, [router]);
+
+  // Poll for new messages every 3 seconds
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
     const checkMessages = async () => {
       try {
-        const res = await fetch('/api/admin/messages/poll', { cache: 'no-store' });
+        const res = await fetch(`/api/admin/messages/poll?_t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
         if (!res.ok) return;
 
         const data = await res.json();
@@ -145,34 +229,21 @@ export default function AdminNotificationListener() {
             const msg = data.latestMessage as LatestMessage;
 
             if (initialLoadRef.current) {
-              // First load: just memorize the latest ID without dinging
-              lastKnownIdRef.current = msg.id;
               initialLoadRef.current = false;
-            } else if (msg.id !== lastKnownIdRef.current) {
-              // New message arrived!
-              lastKnownIdRef.current = msg.id;
-              setActiveNotification(msg);
-              playNotificationSound();
+              let lastAlertedId: string | null = null;
+              try {
+                lastAlertedId = sessionStorage.getItem('aurvella_last_alerted_id');
+              } catch {}
 
-              // Trigger Desktop notification if permission granted
-              if (
-                typeof window !== 'undefined' &&
-                'Notification' in window &&
-                Notification.permission === 'granted'
-              ) {
-                try {
-                  const notification = new Notification(`Pesan Baru: ${msg.name}`, {
-                    body: `${msg.subject} - "${msg.message.slice(0, 80)}..."`,
-                    icon: '/logo.png',
-                  });
-                  notification.onclick = () => {
-                    window.focus();
-                    router.push('/admin/pesan');
-                  };
-                } catch (notifErr) {
-                  console.error('Desktop notification error:', notifErr);
-                }
+              // If latest message is NEW and was created recently (< 30 mins) and not yet alerted in this session
+              const isRecent = Date.now() - new Date(msg.createdAt).getTime() < 30 * 60 * 1000;
+              if (msg.status === 'NEW' && msg.id !== lastAlertedId && isRecent) {
+                triggerAlert(msg);
+              } else {
+                lastKnownIdRef.current = msg.id;
               }
+            } else if (msg.id !== lastKnownIdRef.current && msg.status === 'NEW') {
+              triggerAlert(msg);
             }
           }
         }
@@ -184,17 +255,17 @@ export default function AdminNotificationListener() {
     // Initial check
     checkMessages();
 
-    // Poll every 5 seconds
-    timer = setInterval(checkMessages, 5000);
+    // Poll every 3 seconds for fast response
+    timer = setInterval(checkMessages, 3000);
 
     return () => clearInterval(timer);
   }, [router]);
 
   return (
-    <div className="fixed top-4 right-4 sm:top-5 sm:right-5 z-50 flex flex-col gap-3 max-w-[calc(100vw-2rem)] sm:max-w-sm w-full pointer-events-none">
+    <div className="fixed top-4 right-4 sm:top-5 sm:right-5 z-[9999] flex flex-col gap-3 max-w-[calc(100vw-2rem)] sm:max-w-sm w-full pointer-events-none">
       {/* Permission prompt banner in Top Right Corner */}
       {showPermissionBanner && permissionState === 'default' && (
-        <div className="pointer-events-auto bg-[#1A1416]/95 backdrop-blur-md text-white border-2 border-[#DFB758] p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-3 duration-300 ring-4 ring-[#DFB758]/20">
+        <div className="pointer-events-auto relative z-[9999] bg-[#1A1416]/95 backdrop-blur-md text-white border-2 border-[#DFB758] p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-3 duration-300 ring-4 ring-[#DFB758]/20">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#DFB758]/20 flex items-center justify-center shrink-0">
               <BellRing className="w-4 h-4 text-[#DFB758]" />
@@ -208,14 +279,14 @@ export default function AdminNotificationListener() {
             <button
               type="button"
               onClick={requestDesktopPermission}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#DFB758] to-[#F5DE9C] hover:opacity-95 text-[#1A1416] font-extrabold text-xs transition-all shadow-sm"
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#DFB758] to-[#F5DE9C] hover:opacity-95 text-[#1A1416] font-extrabold text-xs transition-all shadow-sm cursor-pointer"
             >
               Izinkan
             </button>
             <button
               type="button"
               onClick={() => setShowPermissionBanner(false)}
-              className="p-1 rounded-lg text-white/50 hover:text-white transition-colors"
+              className="p-1 rounded-lg text-white/50 hover:text-white transition-colors cursor-pointer"
               aria-label="Tutup Banner"
             >
               <X className="w-3.5 h-3.5" />
@@ -226,7 +297,7 @@ export default function AdminNotificationListener() {
 
       {/* Floating Pop-up Toast for Incoming Messages */}
       {activeNotification && (
-        <div className="pointer-events-auto w-full animate-in slide-in-from-top-4 fade-in duration-300">
+        <div className="pointer-events-auto w-full relative z-[9999] animate-in slide-in-from-top-4 fade-in duration-300">
           <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-[#B83253] p-4 text-[#2D2527] ring-4 ring-[#B83253]/15 transition-all">
             {/* Header Notification */}
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#F0E4E7]">
@@ -243,7 +314,7 @@ export default function AdminNotificationListener() {
                 <button
                   type="button"
                   onClick={playNotificationSound}
-                  className="text-gray-400 hover:text-[#B83253] p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="text-gray-400 hover:text-[#B83253] p-1 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                   title="Tes Bunyi Chime"
                 >
                   <Volume2 className="w-3.5 h-3.5" />
@@ -251,7 +322,7 @@ export default function AdminNotificationListener() {
                 <button
                   type="button"
                   onClick={() => setActiveNotification(null)}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                   aria-label="Tutup Notifikasi"
                 >
                   <X className="w-4 h-4" />
@@ -289,25 +360,30 @@ export default function AdminNotificationListener() {
 
             {/* Action Buttons: Direct Link & WhatsApp */}
             <div className="flex items-center gap-2 pt-1">
-              <button
+              <Link
+                href="/admin/pesan"
                 onClick={() => {
                   setActiveNotification(null);
-                  router.push('/admin/pesan');
+                  router.refresh();
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('aurvella:refresh-messages'));
+                  }
                 }}
-                className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-[#B83253] to-[#DF4D73] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-[#B83253]/20 hover:opacity-95 transition-all cursor-pointer"
+                className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#B83253] to-[#DF4D73] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-[#B83253]/20 hover:opacity-95 transition-all cursor-pointer relative z-10 select-none"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>Buka Pesan</span>
                 <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              </Link>
 
               <a
-                href={`https://wa.me/${activeNotification.whatsapp.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(
-                  activeNotification.name
-                )},%20terima%20kasih%20telah%20menghubungi%20Aurvella%20Florist.`}
+                href={getWhatsAppChatUrl(activeNotification.whatsapp, activeNotification.name)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="py-2 px-3 rounded-xl bg-[#25D366] text-white text-xs font-bold flex items-center justify-center gap-1 shadow-sm hover:bg-[#20bd5a] transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                className="py-2.5 px-3 rounded-xl bg-[#25D366] text-white text-xs font-bold flex items-center justify-center gap-1 shadow-sm hover:bg-[#20bd5a] transition-all cursor-pointer relative z-10 select-none"
                 title="Balas via WhatsApp"
               >
                 <Phone className="w-3.5 h-3.5 fill-white" />

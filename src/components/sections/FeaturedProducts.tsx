@@ -32,7 +32,7 @@ export default function FeaturedProducts({
               <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
               Aurvella Florist by. Maharani Florist
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2D2527] mt-2">
+            <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-[#2D2527] mt-2 tracking-wide">
               Produk Pilihan &amp; Unggulan
             </h2>
             <p className="text-[#6B5E63] text-sm sm:text-base mt-2 max-w-xl">

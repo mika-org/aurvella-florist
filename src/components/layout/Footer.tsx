@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Flower2, Phone, MapPin, Instagram, ShoppingBag, Send, Sparkles, Lock } from 'lucide-react';
+import { Phone, MapPin, Instagram, ShoppingBag, Send, Sparkles, Lock } from 'lucide-react';
 
 interface FooterProps {
   businessName?: string;
@@ -42,10 +42,10 @@ export default function Footer({
               </div>
               <div>
                 <div className="flex items-baseline gap-1.5 flex-wrap">
-                  <span className="font-serif text-2xl font-bold tracking-tight text-[#FDE8ED]">
+                  <span className="text-2xl font-extrabold tracking-tight text-[#FDE8ED]">
                     Aurvella Florist
                   </span>
-                  <span className="text-xs font-semibold text-[#DFB758] italic font-serif">
+                  <span className="text-xs font-semibold text-[#DFB758] italic">
                     by. Maharani Florist
                   </span>
                 </div>
@@ -103,7 +103,7 @@ export default function Footer({
 
           {/* Quick links */}
           <div className="space-y-4">
-            <h3 className="font-serif text-lg font-semibold text-[#DFB758] tracking-wide">
+            <h3 className="text-sm font-bold text-[#DFB758] uppercase tracking-wider">
               Navigasi Cepat
             </h3>
             <ul className="space-y-2.5 text-sm text-white/75">
@@ -141,7 +141,7 @@ export default function Footer({
 
           {/* Kategori Populer */}
           <div className="space-y-4">
-            <h3 className="font-serif text-lg font-semibold text-[#DFB758] tracking-wide">
+            <h3 className="text-sm font-bold text-[#DFB758] uppercase tracking-wider">
               Koleksi Standing Flower
             </h3>
             <ul className="space-y-2.5 text-sm text-white/75">
@@ -180,7 +180,7 @@ export default function Footer({
 
           {/* Kontak & Alamat */}
           <div className="space-y-4">
-            <h3 className="font-serif text-lg font-semibold text-[#DFB758] tracking-wide">
+            <h3 className="text-sm font-bold text-[#DFB758] uppercase tracking-wider">
               Workshop Bandung
             </h3>
             <div className="space-y-3 text-sm text-white/75">

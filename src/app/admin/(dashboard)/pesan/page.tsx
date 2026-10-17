@@ -5,6 +5,9 @@ import { getCurrentAdmin } from '@/lib/auth';
 import MessageManagementClient from './MessageManagementClient';
 
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminMessagesPage() {
   const admin = await getCurrentAdmin();
   if (!admin) {
@@ -15,5 +18,16 @@ export default async function AdminMessagesPage() {
     orderBy: { createdAt: 'desc' },
   });
 
-  return <MessageManagementClient initialMessages={messages} />;
+  const serializedMessages = messages.map((m) => ({
+    id: m.id,
+    name: m.name,
+    whatsapp: m.whatsapp,
+    email: m.email,
+    subject: m.subject,
+    message: m.message,
+    status: m.status,
+    createdAt: m.createdAt.toISOString(),
+  }));
+
+  return <MessageManagementClient initialMessages={serializedMessages} />;
 }

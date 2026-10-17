@@ -16,7 +16,7 @@ Gunakan teknologi berikut:
 - Prisma ORM untuk pengelolaan database.
 - Zod untuk validasi data frontend dan backend.
 - Tailwind CSS untuk styling.
-- GSAP untuk animasi interaktif.
+- Framer Motion (`framer-motion`) untuk animasi interaktif & visual mewah.
 - React Hook Form dan Zod untuk formulir.
 - Lucide React untuk ikon.
 - Next.js Image untuk optimasi gambar.
@@ -79,7 +79,7 @@ Elemen hero banner:
 - Informasi promo yang menonjol.
 - Harga promo dan harga normal dengan efek coret jika produk promo tersedia.
 - Ornamen bunga yang bergerak perlahan di sekitar banner.
-- Animasi bunga dan elemen dekoratif dengan GSAP.
+- Animasi bunga dan elemen dekoratif dengan Framer Motion.
 - Ornamen tidak menutupi teks, CTA, maupun informasi harga.
 - Layout tetap optimal pada mobile.
 
@@ -115,18 +115,18 @@ Sediakan aset kategori pada struktur seperti berikut:
 
 Jika file gambar belum tersedia, gunakan placeholder lokal yang konsisten dan mudah diganti melalui pengaturan aset.
 
-**Interaksi animasi kategori menggunakan GSAP:**
+**Interaksi animasi kategori menggunakan Framer Motion:**
 
-- Ketika kategori dipilih, berikan animasi zoom-out atau scale-down pada kartu kategori yang dipilih.
+- Ketika kategori dipilih, berikan animasi transisi spring yang halus pada kartu kategori yang dipilih.
 - Kategori yang dipilih harus terlihat jelas sebagai kategori aktif.
 - Kartu lain dapat sedikit mengecil atau mengalami perubahan opacity.
-- Gunakan easing yang lembut dan durasi singkat.
+- Gunakan easing yang lembut dan spring physics natural.
 - Jangan membuat semua kartu hilang atau terlalu kecil.
 - Pastikan interaksi tetap berfungsi pada perangkat sentuh.
 - Sediakan state kategori aktif yang sinkron dengan navigasi atau filter produk.
 - Hormati preferensi `prefers-reduced-motion`.
 
-Gunakan GSAP dengan benar melalui `useRef`, `useEffect` atau `useGSAP` jika tersedia, serta lakukan cleanup animasi untuk mencegah memory leak.
+Gunakan Framer Motion dengan komponen deklaratif `motion.div` dan `AnimatePresence`.
 
 ### C. Section Produk Unggulan
 
@@ -375,7 +375,7 @@ Fitur pengelolaan tautan:
 - Menampilkan tautan aktif saja pada halaman publik.
 - Membuka tautan eksternal dengan konfigurasi keamanan yang sesuai.
 
-Gunakan animasi GSAP untuk kupu-kupu, bunga, dan daun dengan gerakan yang lembut, seperti floating, sway, atau perpindahan kecil. Batasi jumlah elemen animasi agar tidak mengganggu performa.
+Gunakan animasi Framer Motion untuk kupu-kupu, bunga, dan daun dengan gerakan yang lembut, seperti floating, sway, atau perpindahan kecil. Batasi jumlah elemen animasi agar tidak mengganggu performa.
 
 Pada perangkat mobile, kurangi ornamen dan intensitas animasi. Hormati `prefers-reduced-motion`.
 
@@ -658,7 +658,7 @@ Kerjakan proyek secara bertahap:
 6. Implementasikan generator SKU otomatis.
 7. Buat frontend homepage beserta seluruh section.
 8. Implementasikan halaman katalog dan detail produk.
-9. Tambahkan GSAP untuk animasi kategori dan ornamen dekoratif.
+9. Tambahkan Framer Motion untuk animasi kategori dan ornamen dekoratif.
 10. Buat halaman Link Tree dan pengelolaan tautannya.
 11. Buat formulir kontak dan pengelolaan pesan.
 12. Buat manajemen testimoni dan pengaturan website.
@@ -671,7 +671,7 @@ Proyek dianggap selesai apabila:
 
 - Seluruh section homepage berfungsi dan tersusun sesuai urutan yang ditentukan.
 - Hero menggunakan `hero-banner-2.jpg`.
-- Kategori mempunyai gambar PNG dan animasi GSAP saat dipilih.
+- Kategori mempunyai gambar PNG dan animasi Framer Motion saat dipilih.
 - Harga normal dan promo ditampilkan dengan benar.
 - SKU dibuat otomatis dan dijamin unik oleh database.
 - Detail produk dapat dikelola melalui admin.

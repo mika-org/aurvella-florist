@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight, CheckCircle2, Sparkles, Layers, ArrowRight } from 'lucide-react';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 interface CategoryItem {
   id: string;
@@ -77,82 +76,15 @@ export default function CategorySection({
   const [selectedSlug, setSelectedSlug] = useState<string | null>(
     activeCategorySlug || null
   );
+  const [prevActiveSlug, setPrevActiveSlug] = useState(activeCategorySlug);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const pillsRef = useRef<HTMLDivElement>(null);
-  const cardsGridRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const bannerRef = useRef<HTMLDivElement>(null);
+  // Sync state if external prop changes during render
+  if (activeCategorySlug !== prevActiveSlug) {
+    setPrevActiveSlug(activeCategorySlug);
+    setSelectedSlug(activeCategorySlug || null);
+  }
 
-  // Sync state if external prop changes
-  useEffect(() => {
-    if (activeCategorySlug !== undefined) {
-      setSelectedSlug(activeCategorySlug || null);
-    }
-  }, [activeCategorySlug]);
-
-  const animateCardSelection = (newSlug: string | null, targetIndex?: number) => {
-    if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
-    const isMobile = window.innerWidth < 768;
-
-    cardsRef.current.forEach((card, i) => {
-      if (!card) return;
-
-      if (!newSlug) {
-        // Reset all cards when deselected
-        gsap.to(card, {
-          y: 0,
-          scale: 1,
-          opacity: 1,
-          zIndex: 1,
-          duration: 0.35,
-          ease: 'power2.out',
-          clearProps: 'zIndex',
-        });
-      } else if (i === targetIndex) {
-        // Active card: lift up and scale up with spring physics
-        gsap.timeline()
-          .to(card, {
-            scale: 0.98,
-            duration: 0.1,
-            ease: 'power1.in',
-          })
-          .to(card, {
-            y: isMobile ? -4 : -8,
-            scale: isMobile ? 1.02 : 1.04,
-            opacity: 1,
-            zIndex: 20,
-            duration: 0.35,
-            ease: 'back.out(2)',
-          });
-      } else {
-        // Inactive cards: subtle scale down and soft opacity
-        gsap.to(card, {
-          y: 0,
-          scale: isMobile ? 0.98 : 0.96,
-          opacity: 0.82,
-          zIndex: 2,
-          duration: 0.3,
-          ease: 'power2.out',
-        });
-      }
-    });
-
-    // Animate banner if newly selected
-    if (newSlug && bannerRef.current) {
-      gsap.fromTo(
-        bannerRef.current,
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out', clearProps: 'opacity,transform' }
-      );
-    }
-  };
-
-  const handleCategoryClick = (slug: string, index: number) => {
+  const handleCategoryClick = (slug: string) => {
     const isCurrentlyActive = selectedSlug === slug;
     const newSlug = isCurrentlyActive ? null : slug;
     setSelectedSlug(newSlug);
@@ -160,8 +92,6 @@ export default function CategorySection({
     if (onSelectCategory) {
       onSelectCategory(newSlug || '');
     }
-
-    animateCardSelection(newSlug, isCurrentlyActive ? undefined : index);
   };
 
   const handlePillClick = (slug: string | null) => {
@@ -170,122 +100,64 @@ export default function CategorySection({
     if (onSelectCategory) {
       onSelectCategory(slug || '');
     }
-
-    if (!slug) {
-      animateCardSelection(null);
-    } else {
-      const idx = categoriesList.findIndex((c) => c.slug === slug);
-      if (idx !== -1) {
-        animateCardSelection(slug, idx);
-      }
-    }
   };
 
-  // GSAP Initial Entrance Animation with safe fromTo & clearProps
-  useGSAP(
-    () => {
-      if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        return;
-      }
-
-      const tl = gsap.timeline({
-        defaults: { ease: 'power2.out' },
-        onComplete: () => {
-          // Double ensure all elements have inline styles cleared so nothing stays hidden
-          if (headerRef.current) {
-            gsap.set(headerRef.current.children, { clearProps: 'opacity,transform' });
-          }
-          if (pillsRef.current) {
-            gsap.set(pillsRef.current.children, { clearProps: 'opacity,transform' });
-          }
-          const valid = cardsRef.current.filter(Boolean);
-          if (valid.length > 0) {
-            gsap.set(valid, { clearProps: 'opacity,transform' });
-          }
-        },
-      });
-
-      // Animate Section Header
-      if (headerRef.current && headerRef.current.children.length > 0) {
-        tl.fromTo(
-          headerRef.current.children,
-          { y: 20, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            stagger: 0.08,
-            duration: 0.6,
-            clearProps: 'opacity,transform',
-          }
-        );
-      }
-
-      // Animate Pills
-      if (pillsRef.current && pillsRef.current.children.length > 0) {
-        tl.fromTo(
-          pillsRef.current.children,
-          { scale: 0.95, opacity: 0 },
-          {
-            scale: 1,
-            opacity: 1,
-            stagger: 0.03,
-            duration: 0.45,
-            clearProps: 'opacity,transform',
-          },
-          '-=0.3'
-        );
-      }
-
-      // Animate Cards with luxury 3D feel
-      const validCards = cardsRef.current.filter(Boolean);
-      if (validCards.length > 0) {
-        tl.fromTo(
-          validCards,
-          { y: 30, opacity: 0, scale: 0.96 },
-          {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            stagger: 0.06,
-            duration: 0.6,
-            ease: 'back.out(1.4)',
-            clearProps: 'opacity,transform',
-          },
-          '-=0.3'
-        );
-      }
-
-      return () => {
-        // Immediate cleanup in React Strict Mode so elements are never frozen at opacity: 0
-        if (headerRef.current) {
-          gsap.set(headerRef.current.children, { clearProps: 'opacity,transform' });
-        }
-        if (pillsRef.current) {
-          gsap.set(pillsRef.current.children, { clearProps: 'opacity,transform' });
-        }
-        const valid = cardsRef.current.filter(Boolean);
-        if (valid.length > 0) {
-          gsap.set(valid, { clearProps: 'opacity,transform' });
-        }
-      };
-    },
-    { scope: containerRef, dependencies: [categoriesList] }
-  );
-
   const activeCategoryObj = categoriesList.find((c) => c.slug === selectedSlug);
+
+  // Animation variants
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.06,
+        delayChildren: 0.05,
+      },
+    },
+  };
+
+  const cardVariants: Variants = {
+    hidden: { opacity: 0, y: 24, scale: 0.96 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 260,
+        damping: 20,
+      },
+    },
+  };
 
   return (
     <section
       id="kategori"
-      ref={containerRef}
       className="py-14 sm:py-20 lg:py-24 bg-gradient-to-b from-white via-[#FCFAFA] to-white overflow-hidden relative"
     >
-      {/* Decorative ambient background accents */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-r from-[#F8B4C4]/15 via-[#DFB758]/10 to-[#F8B4C4]/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      {/* Decorative ambient background accents with motion pulse */}
+      <motion.div
+        animate={{
+          scale: [1, 1.08, 1],
+          opacity: [0.12, 0.22, 0.12],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+        className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-r from-[#F8B4C4]/20 via-[#DFB758]/15 to-[#F8B4C4]/20 rounded-full blur-3xl pointer-events-none -z-10"
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center max-w-3xl mx-auto mb-8 sm:mb-10"
+        >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFF0F4] border border-[#F8B4C4]/70 mb-3 shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-[#B83253]" />
             <span className="text-[11px] sm:text-xs uppercase tracking-widest text-[#B83253] font-bold">
@@ -293,7 +165,7 @@ export default function CategorySection({
             </span>
           </div>
 
-          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#2D2527] tracking-tight">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-[#2D2527] tracking-wide">
             Katalog Lengkap Karangan Bunga &amp; Standing Flower
           </h2>
 
@@ -302,12 +174,18 @@ export default function CategorySection({
           <p className="text-[#6B5E63] text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
             Kini hadir semakin kumplit sebagai bagian dari <strong className="text-[#2D2527]">Maharani Florist Bandung</strong>. Menghadirkan koleksi terlengkap mulai dari <strong className="text-[#B83253]">Spesialis Standing Flower No. 1 di Bandung</strong> (Acrylic, Cermin, PVC, &amp; Bunga Segar) hingga <strong className="text-[#2D2527]">Bunga Papan Dukacita</strong> resmi dengan pengerjaan rapi dan layanan 24 jam.
           </p>
-        </div>
+        </motion.div>
 
         {/* Maharani Florist Synergy Banner */}
-        <div className="max-w-4xl mx-auto mb-8 p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#FFF5F7] via-[#FFFDF8] to-[#FFF5F7] border border-[#F8B4C4]/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="max-w-4xl mx-auto mb-8 p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#FFF5F7] via-[#FFFDF8] to-[#FFF5F7] border border-[#F8B4C4]/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4"
+        >
           <div className="flex items-center gap-3.5 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#B83253] to-[#8E1F3B] text-white flex items-center justify-center font-serif font-extrabold text-sm shrink-0 shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#B83253] to-[#8E1F3B] text-white flex items-center justify-center font-extrabold text-sm shrink-0 shadow-md">
               AF
             </div>
             <div>
@@ -331,36 +209,43 @@ export default function CategorySection({
             <span>Lihat Semua Katalog</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
-        </div>
+        </motion.div>
 
-        {/* Quick Filter Pills (Smooth scroll on mobile, centered on desktop) */}
-        <div
-          ref={pillsRef}
+        {/* Quick Filter Pills with Framer Motion interactive feedback */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.45 }}
           className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 sm:mb-10 no-scrollbar justify-start sm:justify-center px-1"
         >
-          <button
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
             type="button"
             onClick={() => handlePillClick(null)}
             className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 flex items-center gap-1.5 cursor-pointer shadow-xs ${
               selectedSlug === null
-                ? 'bg-[#B83253] text-white shadow-md shadow-[#B83253]/25 ring-2 ring-[#B83253]/30 scale-105'
+                ? 'bg-[#B83253] text-white shadow-md shadow-[#B83253]/25 ring-2 ring-[#B83253]/30'
                 : 'bg-white text-[#4A3E42] border border-[#E8D9DC] hover:border-[#B83253] hover:text-[#B83253]'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Semua Kategori</span>
-          </button>
+          </motion.button>
 
           {categoriesList.map((cat) => {
             const isPillActive = selectedSlug === cat.slug;
             return (
-              <button
+              <motion.button
                 key={`pill-${cat.id}`}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
                 type="button"
                 onClick={() => handlePillClick(cat.slug)}
                 className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 flex items-center gap-1.5 cursor-pointer shadow-xs ${
                   isPillActive
-                    ? 'bg-[#B83253] text-white shadow-md shadow-[#B83253]/25 ring-2 ring-[#B83253]/30 scale-105'
+                    ? 'bg-[#B83253] text-white shadow-md shadow-[#B83253]/25 ring-2 ring-[#B83253]/30'
                     : 'bg-white text-[#4A3E42] border border-[#E8D9DC] hover:border-[#B83253] hover:text-[#B83253]'
                 }`}
               >
@@ -376,17 +261,17 @@ export default function CategorySection({
                     {cat._count.products}
                   </span>
                 )}
-              </button>
+              </motion.button>
             );
           })}
-        </div>
+        </motion.div>
 
-        {/* Category Cards Grid
-            - Mobile (<640px): 2 columns
-            - Tablet (640px-1024px): 3 columns
-            - Laptop/Desktop (>=1024px): 3 to 6 columns side by side */}
-        <div
-          ref={cardsGridRef}
+        {/* Category Cards Grid with Framer Motion Layout & Stagger */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-4 xl:gap-5 items-stretch"
         >
           {categoriesList.map((cat, index) => {
@@ -395,13 +280,24 @@ export default function CategorySection({
             const isLastOnMobile = index === categoriesList.length - 1 && categoriesList.length % 2 !== 0;
 
             return (
-              <div
+              <motion.div
                 key={cat.id}
-                ref={(el) => {
-                  cardsRef.current[index] = el;
-                }}
-                onClick={() => handleCategoryClick(cat.slug, index)}
-                className={`group cursor-pointer rounded-2xl sm:rounded-3xl p-3 sm:p-4 lg:p-5 transition-all duration-300 relative flex flex-col justify-between border will-change-transform select-none ${
+                variants={cardVariants}
+                animate={
+                  isSelected
+                    ? { y: -8, scale: 1.03, zIndex: 20 }
+                    : hasAnySelected
+                    ? { y: 0, scale: 0.97, opacity: 0.85, zIndex: 1 }
+                    : { y: 0, scale: 1, opacity: 1, zIndex: 1 }
+                }
+                whileHover={
+                  !isSelected
+                    ? { y: -6, scale: 1.02, transition: { duration: 0.25 } }
+                    : {}
+                }
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleCategoryClick(cat.slug)}
+                className={`group cursor-pointer rounded-2xl sm:rounded-3xl p-3 sm:p-4 lg:p-5 transition-colors duration-300 relative flex flex-col justify-between border select-none ${
                   isLastOnMobile ? 'col-span-2 sm:col-span-1' : 'col-span-1'
                 } ${
                   isSelected
@@ -410,9 +306,6 @@ export default function CategorySection({
                     ? 'bg-white border-[#F0E4E7] shadow-xs hover:border-[#B83253]/50'
                     : 'bg-white hover:bg-gradient-to-b hover:from-white hover:to-[#FFF9FB] border-[#F0E4E7] hover:border-[#DFB758] hover:shadow-xl hover:shadow-[#DFB758]/15'
                 }`}
-                style={{
-                  transformOrigin: 'center center',
-                }}
               >
                 <div>
                   {/* Category Image with glow & active badge */}
@@ -430,18 +323,26 @@ export default function CategorySection({
                     {/* Gradient Overlay for contrast */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                    {/* Active badge */}
-                    {isSelected && (
-                      <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-[#B83253] text-white shadow-md flex items-center gap-1 z-10 animate-fade-in">
-                        <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        <span>Dipilih</span>
-                      </div>
-                    )}
+                    {/* Active badge with AnimatePresence */}
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.6, y: -4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.6, y: -4 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-[#B83253] text-white shadow-md flex items-center gap-1 z-10"
+                        >
+                          <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                          <span>Dipilih</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
                   {/* Category Info */}
                   <h3
-                    className={`font-serif font-bold transition-colors leading-tight text-sm sm:text-base lg:text-lg ${
+                    className={`font-bold transition-colors leading-tight text-sm sm:text-base lg:text-lg ${
                       isSelected
                         ? 'text-[#B83253]'
                         : 'text-[#2D2527] group-hover:text-[#B83253]'
@@ -481,46 +382,51 @@ export default function CategorySection({
                     <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
-        {/* Selected Category Highlight Banner */}
-        {activeCategoryObj && (
-          <div
-            ref={bannerRef}
-            className="mt-8 sm:mt-10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#FFF5F7] via-white to-[#FFF5F7] border border-[#F8B4C4] shadow-md flex flex-col sm:flex-row items-center justify-between gap-4"
-          >
-            <div className="flex items-center gap-3.5 text-center sm:text-left">
-              <div className="w-12 h-12 rounded-2xl bg-[#B83253]/10 text-[#B83253] flex items-center justify-center shrink-0 border border-[#B83253]/20">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-wider text-[#B83253] font-bold">
-                  Kategori Terpilih
+        {/* Selected Category Highlight Banner with AnimatePresence */}
+        <AnimatePresence>
+          {activeCategoryObj && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -16, scale: 0.98 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-8 sm:mt-10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#FFF5F7] via-white to-[#FFF5F7] border border-[#F8B4C4] shadow-md flex flex-col sm:flex-row items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 text-center sm:text-left">
+                <div className="w-12 h-12 rounded-2xl bg-[#B83253]/10 text-[#B83253] flex items-center justify-center shrink-0 border border-[#B83253]/20">
+                  <Sparkles className="w-6 h-6" />
                 </div>
-                <h4 className="font-serif text-lg sm:text-xl font-bold text-[#2D2527]">
-                  {activeCategoryObj.name} Bandung
-                </h4>
-                <p className="text-xs text-[#6B5E63] mt-0.5 max-w-xl">
-                  {activeCategoryObj.description ||
-                    'Rangkaian eksklusif dengan garansi bunga segar dan gratis ongkir area Kota Bandung.'}
-                </p>
+                <div>
+                  <div className="text-[11px] uppercase tracking-wider text-[#B83253] font-bold">
+                    Kategori Terpilih
+                  </div>
+                  <h4 className="font-heading text-xl sm:text-2xl font-semibold text-[#2D2527]">
+                    {activeCategoryObj.name} Bandung
+                  </h4>
+                  <p className="text-xs text-[#6B5E63] mt-0.5 max-w-xl">
+                    {activeCategoryObj.description ||
+                      'Rangkaian eksklusif dengan garansi bunga segar dan gratis ongkir area Kota Bandung.'}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
-              <Link
-                href={`/kategori/${activeCategoryObj.slug}`}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#B83253] hover:bg-[#962340] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-[#B83253]/20 hover:scale-102 transition-all cursor-pointer"
-              >
-                <span>Buka Koleksi {activeCategoryObj.name}</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        )}
+              <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+                <Link
+                  href={`/kategori/${activeCategoryObj.slug}`}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#B83253] hover:bg-[#962340] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-[#B83253]/20 hover:scale-102 transition-all cursor-pointer"
+                >
+                  <span>Buka Koleksi {activeCategoryObj.name}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

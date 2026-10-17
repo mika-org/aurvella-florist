@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { contactMessageSchema } from '@/lib/validations';
 import { z } from 'zod';
 import { Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type FormData = z.infer<typeof contactMessageSchema>;
 
@@ -51,35 +52,78 @@ export default function ContactMessageForm() {
 
       setSuccessMessage('Pesan Anda berhasil dikirim! Tim Aurvella Florist akan segera menghubungi nomor WhatsApp Anda.');
       reset();
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Terjadi kesalahan sistem. Silakan hubungi langsung via WhatsApp.');
+
+      // Immediately broadcast new message to any open tab (e.g. Admin Dashboard)
+      if (typeof window !== 'undefined') {
+        const newMsgPayload = {
+          id: resData.messageId || String(Date.now()),
+          name: data.name,
+          whatsapp: data.whatsapp,
+          subject: data.subject,
+          message: data.message,
+          status: 'NEW',
+          createdAt: new Date().toISOString(),
+        };
+
+        // BroadcastChannel across tabs to notify Admin Dashboard in background
+        if ('BroadcastChannel' in window) {
+          try {
+            const channel = new BroadcastChannel('aurvella_notifications');
+            channel.postMessage({ type: 'NEW_MESSAGE', message: newMsgPayload });
+            channel.close();
+          } catch {}
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan sistem. Silakan hubungi langsung via WhatsApp.';
+      setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-[#F4E2E7]">
-      <h3 className="font-serif text-2xl font-bold text-[#2D2527] mb-2">
+    <motion.div
+      whileHover={{
+        boxShadow: '0 20px 40px -15px rgba(184, 50, 83, 0.10)',
+        transition: { duration: 0.25 },
+      }}
+      className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-[#F4E2E7] transition-colors"
+    >
+      <h3 className="font-heading text-2xl sm:text-3xl font-semibold text-[#2D2527] mb-2 tracking-wide">
         Kirim Pesan atau Pertanyaan
       </h3>
       <p className="text-xs sm:text-sm text-[#6B5E63] mb-6">
         Isi formulir berikut, kami akan segera merespons melalui WhatsApp atau email Anda.
       </p>
 
-      {successMessage && (
-        <div className="mb-6 p-4 rounded-xl bg-[#E8F8EE] border border-[#25D366]/40 text-[#1F5133] text-sm flex items-start gap-3">
-          <CheckCircle2 className="w-5 h-5 text-[#25D366] shrink-0 mt-0.5" />
-          <span>{successMessage}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ duration: 0.3 }}
+            className="mb-6 p-4 rounded-xl bg-[#E8F8EE] border border-[#25D366]/40 text-[#1F5133] text-sm flex items-start gap-3 shadow-2xs"
+          >
+            <CheckCircle2 className="w-5 h-5 text-[#25D366] shrink-0 mt-0.5" />
+            <span>{successMessage}</span>
+          </motion.div>
+        )}
 
-      {errorMessage && (
-        <div className="mb-6 p-4 rounded-xl bg-[#FDEEEF] border border-[#B83253]/30 text-[#B83253] text-sm flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-[#B83253] shrink-0 mt-0.5" />
-          <span>{errorMessage}</span>
-        </div>
-      )}
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ duration: 0.3 }}
+            className="mb-6 p-4 rounded-xl bg-[#FDEEEF] border border-[#B83253]/30 text-[#B83253] text-sm flex items-start gap-3 shadow-2xs"
+          >
+            <AlertCircle className="w-5 h-5 text-[#B83253] shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Anti-spam honeypot (hidden from real users) */}
@@ -190,10 +234,12 @@ export default function ContactMessageForm() {
           )}
         </div>
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.015 }}
+          whileTap={{ scale: 0.985 }}
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3.5 px-6 rounded-xl font-semibold text-white bg-gradient-to-r from-[#B83253] to-[#E56A88] hover:opacity-95 shadow-lg shadow-[#B83253]/20 flex items-center justify-center gap-2 transition-all disabled:opacity-60"
+          className="w-full py-3.5 px-6 rounded-xl font-semibold text-white bg-gradient-to-r from-[#B83253] to-[#E56A88] hover:opacity-95 shadow-lg shadow-[#B83253]/20 flex items-center justify-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
         >
           {isSubmitting ? (
             <>
@@ -206,8 +252,8 @@ export default function ContactMessageForm() {
               <span>Kirim Pesan Sekarang</span>
             </>
           )}
-        </button>
+        </motion.button>
       </form>
-    </div>
+    </motion.div>
   );
 }

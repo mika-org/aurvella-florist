@@ -1,15 +1,27 @@
 import React from 'react';
 import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import ProductCard from '@/components/products/ProductCard';
 import Link from 'next/link';
 import { Sparkles, SlidersHorizontal } from 'lucide-react';
 
 
 export const metadata: Metadata = {
-  title: 'Katalog Standing Flower Bandung - Aurvella Florist',
+  title: 'Katalog Standing Flower & Karangan Bunga Bandung | Aurvella Florist',
   description:
-    'Lihat koleksi lengkap standing flower di Bandung: Standing Acrylic, Standing Cermin, Standing PVC, Bunga Segar, dan Standing Duka Cita. Free ongkir & pemesanan cepat.',
+    'Koleksi terlengkap spesialis standing flower no. 1 di Bandung: Standing Acrylic modern, Standing Cermin wedding, Foam PVC, Bunga Segar, dan Bunga Papan Duka Cita. Free ongkir & same day delivery 2-4 jam se-Kota Bandung.',
+  alternates: {
+    canonical: '/produk',
+  },
+  openGraph: {
+    title: 'Katalog Standing Flower & Karangan Bunga Bandung - Aurvella Florist',
+    description:
+      'Koleksi terlengkap standing flower akrilik, cermin wedding, PVC, fresh flower, dan bunga papan duka cita di Bandung. Gratis ongkir & garansi bunga segar.',
+    url: 'https://aurvellaflorist.com/produk',
+    type: 'website',
+    images: ['/images/hero-banner-2.png'],
+  },
 };
 
 interface ProductsPageProps {
@@ -22,7 +34,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const searchQuery = resolvedParams.q;
   const sortOption = resolvedParams.sort || 'order';
 
-  const whereClause: any = {
+  const whereClause: Prisma.ProductWhereInput = {
     isPublished: true,
   };
 
@@ -38,7 +50,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     ];
   }
 
-  let orderBy: any = { order: 'asc' };
+  let orderBy: Prisma.ProductOrderByWithRelationInput = { order: 'asc' };
   if (sortOption === 'price_asc') orderBy = { price: 'asc' };
   else if (sortOption === 'price_desc') orderBy = { price: 'desc' };
   else if (sortOption === 'newest') orderBy = { createdAt: 'desc' };
@@ -82,7 +94,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <Sparkles className="w-3.5 h-3.5 text-[#DFB758]" />
             Aurvella Florist by. Maharani Florist
           </span>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#2D2527] mt-2 mb-3">
+          <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2D2527] mt-2 mb-3 tracking-wide">
             Katalog Karangan Bunga &amp; Standing Flower Bandung
           </h1>
           <p className="text-sm text-[#6B5E63] leading-relaxed max-w-2xl mx-auto">
@@ -134,7 +146,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
         {products.length === 0 && (
           <div className="text-center py-20 bg-white rounded-3xl border border-[#F3E2E6] shadow-sm max-w-lg mx-auto">
-            <p className="font-serif text-lg text-[#2D2527] font-semibold">
+            <p className="text-lg text-[#2D2527] font-bold">
               Tidak ada produk ditemukan
             </p>
             <p className="text-xs text-[#7A6D72] mt-2 mb-6">
