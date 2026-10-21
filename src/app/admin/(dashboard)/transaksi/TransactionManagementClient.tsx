@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
@@ -472,7 +472,7 @@ export default function TransactionManagementClient({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-[#B83253] to-[#DF4D73] hover:opacity-95 shadow-md shadow-[#B83253]/25 transition-all hover:scale-[1.02]"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Input Transaksi Baru</span>
+            <span>Input Transaksi Baru</span>
           </button>
         </div>
       </div>
@@ -829,7 +829,7 @@ export default function TransactionManagementClient({
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-10 h-10 rounded-lg overflow-hidden relative bg-[#FAF6F8] shrink-0 border border-[#F4E6EB]">
-                              <Image src={p.imageUrl} alt={p.name} fill sizes="40px" className="object-cover" />
+                              <SkeletonImage src={p.imageUrl} alt={p.name} fill sizes="40px" className="object-cover" />
                             </div>
                             <div className="min-w-0">
                               <span className="font-bold text-[#2D2527] block truncate">

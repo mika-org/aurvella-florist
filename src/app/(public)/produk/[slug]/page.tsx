@@ -1,8 +1,8 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import prisma from '@/lib/prisma';
 import { buildWhatsAppLink } from '@/lib/utils';
 import ProductCard from '@/components/products/ProductCard';
@@ -226,7 +226,7 @@ export default async function ProductDetailPage({
           {/* Left: Gallery */}
           <div className="lg:col-span-6 space-y-4">
             <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF8F8] border border-[#F4E6EB]">
-              <Image
+              <SkeletonImage
                 src={primaryImage}
                 alt={product.images[0]?.alt || product.name}
                 fill
@@ -252,7 +252,7 @@ export default async function ProductDetailPage({
                     key={img.id}
                     className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-[#DFB758] shrink-0"
                   >
-                    <Image
+                    <SkeletonImage
                       src={img.url}
                       alt={img.alt || product.name}
                       fill

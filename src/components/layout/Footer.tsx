@@ -1,6 +1,5 @@
-import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { Phone, MapPin, Instagram, ShoppingBag, Send, Sparkles, Lock } from 'lucide-react';
 
 interface FooterProps {
@@ -32,7 +31,7 @@ export default function Footer({
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="relative w-11 h-11 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#F8B4C4]/60 shrink-0 p-0.5">
-                <Image
+                <SkeletonImage
                   src="/logo.png"
                   alt={`${businessName} Logo`}
                   fill

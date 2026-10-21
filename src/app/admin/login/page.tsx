@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -188,7 +188,7 @@ export default function AdminLoginPage() {
             className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-tr from-[#F7A8BB] via-[#F1D78B] to-[#EE7796] p-1 shadow-md mx-auto mb-3 flex items-center justify-center cursor-pointer"
           >
             <div className="relative w-full h-full rounded-xl bg-white flex items-center justify-center overflow-hidden">
-              <Image
+              <SkeletonImage
                 src="/logo.png"
                 alt="Aurvella Florist Logo"
                 fill

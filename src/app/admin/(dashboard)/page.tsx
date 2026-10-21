@@ -1,7 +1,7 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import prisma from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
 import { formatRupiah } from '@/lib/utils';
@@ -272,7 +272,7 @@ export default async function AdminDashboardPage() {
 
                         {/* Thumbnail */}
                         <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white shrink-0 border border-[#F5E2E7]">
-                          <Image src={imgUrl} alt={p.name} fill sizes="44px" className="object-cover" />
+                          <SkeletonImage src={imgUrl} alt={p.name} fill sizes="44px" className="object-cover" />
                         </div>
 
                         {/* Details */}

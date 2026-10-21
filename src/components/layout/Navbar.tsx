@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { Menu, X, Phone, Sparkles, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,7 +28,7 @@ export default function Navbar({
               whileTap={{ scale: 0.95 }}
               className="relative w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#F8B4C4]/70 transition-transform shrink-0 p-0.5"
             >
-              <Image
+              <SkeletonImage
                 src="/logo.png"
                 alt={`${businessName} Logo`}
                 fill

@@ -179,7 +179,7 @@ export default function FaqManagementClient({ initialFaqs }: Props) {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-[#B83253] to-[#DF4D73] hover:opacity-95 shadow-md shadow-[#B83253]/25 transition-all hover:scale-[1.02]"
         >
           <Plus className="w-4 h-4" />
-          <span>+ Tambah FAQ Baru</span>
+          <span>Tambah FAQ Baru</span>
         </button>
       </div>
 

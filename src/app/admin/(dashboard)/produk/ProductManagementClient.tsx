@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import Image from 'next/image';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
@@ -1030,7 +1030,7 @@ export default function ProductManagementClient({
                   title="Tampilkan semua produk terpilih di slider hero banner"
                 >
                   <Tv className="w-3.5 h-3.5" />
-                  <span>+ Tampil di Hero</span>
+                  <span>Tampil di Hero</span>
                 </button>
 
                 <button
@@ -1040,7 +1040,7 @@ export default function ProductManagementClient({
                   title="Hapus dari slider hero banner"
                 >
                   <EyeOff className="w-3.5 h-3.5" />
-                  <span>- Hapus dari Hero</span>
+                  <span>Hapus dari Hero</span>
                 </button>
 
                 {/* Featured bulk actions */}
@@ -1051,7 +1051,7 @@ export default function ProductManagementClient({
                   title="Jadikan produk unggulan di homepage"
                 >
                   <Star className="w-3.5 h-3.5 fill-[#1A1416]" />
-                  <span>+ Unggulan</span>
+                  <span>Set Unggulan</span>
                 </button>
 
                 <button
@@ -1060,7 +1060,7 @@ export default function ProductManagementClient({
                   className="px-3 py-1.5 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20 flex items-center gap-1.5 transition-all"
                   title="Hapus status unggulan"
                 >
-                  <span>- Unggulan</span>
+                  <span>Hapus Unggulan</span>
                 </button>
 
                 {/* Publish / Draft */}
@@ -1189,7 +1189,7 @@ export default function ProductManagementClient({
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#FAF6F8] shrink-0 border border-[#F2E4E8] shadow-xs">
-                          <Image src={img} alt={p.name} fill sizes="48px" className="object-cover" />
+                          <SkeletonImage src={img} alt={p.name} fill sizes="48px" className="object-cover" />
                         </div>
                         <div className="min-w-0 max-w-xs">
                           <span className="font-bold text-[#2D2527] block truncate" title={p.name}>

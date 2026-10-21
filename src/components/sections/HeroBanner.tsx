@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { Phone, ArrowRight, Sparkles, CheckCircle2, ChevronLeft, ChevronRight, Tag, Eye } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import PromoCountdown from '@/components/ui/PromoCountdown';
@@ -118,7 +118,7 @@ export default function HeroBanner({
     <section className="relative min-h-[92vh] lg:min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* 1. Full Screen Background Image: hero-banner-2.png */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <Image
+        <SkeletonImage
           src="/images/hero-banner-2.png"
           alt="Standing Flower Bandung Spesialis - Aurvella Florist"
           fill
@@ -446,7 +446,7 @@ export default function HeroBanner({
                   >
                     {/* Image Container */}
                     <div className="relative aspect-video w-full rounded-2xl overflow-hidden my-3 border border-[#F5E6EA] bg-[#FAF8F8]">
-                      <Image
+                      <SkeletonImage
                         src={activeProduct.imageUrl || '/products/Standing Acrylik Artificial/800k.jpg'}
                         alt={activeProduct.name}
                         fill

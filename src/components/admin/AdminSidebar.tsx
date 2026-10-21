@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -135,7 +135,7 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
       <div className="lg:hidden bg-white border-b border-[#F0E4E7] px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
           <div className="relative w-9 h-9 rounded-full overflow-hidden bg-white shadow-xs border border-[#F8B4C4]/60 shrink-0 p-0.5">
-            <Image src="/logo.png" alt="Aurvella Logo" fill className="object-contain" sizes="36px" />
+            <SkeletonImage src="/logo.png" alt="Aurvella Logo" fill className="object-contain" sizes="36px" />
           </div>
           <div>
             <div className="flex items-baseline gap-1">
@@ -183,7 +183,7 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
           <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
             <Link href="/admin" className="flex items-center gap-3">
               <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white p-0.5 shadow-md shadow-[#B83253]/20 border border-[#F8B4C4]/60 shrink-0">
-                <Image src="/logo.png" alt="Aurvella Admin Logo" fill className="object-contain" sizes="40px" />
+                <SkeletonImage src="/logo.png" alt="Aurvella Admin Logo" fill className="object-contain" sizes="40px" />
               </div>
               <div>
                 <span className="font-serif font-bold text-base text-white tracking-wide block leading-tight">

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { Phone, Eye, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatRupiah, buildWhatsAppLink } from '@/lib/utils';
@@ -64,7 +64,7 @@ export default function ProductCard({
       <div>
         {/* Thumbnail Container */}
         <div className="relative aspect-square w-full overflow-hidden bg-[#FAF6F8]">
-          <Image
+          <SkeletonImage
             src={imageUrl}
             alt={product.images?.[0]?.alt || product.name}
             fill

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import Image from 'next/image';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { UploadCloud, Loader2, CheckCircle2, AlertCircle, Link as LinkIcon, X } from 'lucide-react';
 
 interface ImageUploadFieldProps {
@@ -91,7 +91,7 @@ export default function ImageUploadField({
         {/* Preview box if value exists */}
         {value && (
           <div className="sm:col-span-1 relative aspect-square rounded-xl overflow-hidden border border-[#F0E4E7] bg-white shadow-xs group">
-            <Image
+            <SkeletonImage
               src={value}
               alt="Preview"
               fill

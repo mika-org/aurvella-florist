@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit2, Trash2, X, Loader2, FolderTree, AlertCircle, Wand2 } from 'lucide-react';
 import ImageUploadField from '@/components/admin/ImageUploadField';
@@ -186,7 +186,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
           >
             <div>
               <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-[#FAF6F8] mb-4 border border-[#F5E6EA]">
-                <Image
+                <SkeletonImage
                   src={cat.image || '/images/categories/standing-acrylic.png'}
                   alt={cat.name}
                   fill

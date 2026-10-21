@@ -1,8 +1,8 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import prisma from '@/lib/prisma';
 import ProductCard from '@/components/products/ProductCard';
 import { ArrowLeft, Sparkles } from 'lucide-react';
@@ -181,7 +181,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </div>
 
             <div className="md:col-span-4 relative aspect-square rounded-2xl overflow-hidden bg-[#FAF6F8] border border-[#F4E6EB] shadow-md">
-              <Image
+              <SkeletonImage
                 src={category.image || '/images/categories/standing-acrylic.png'}
                 alt={category.name}
                 fill

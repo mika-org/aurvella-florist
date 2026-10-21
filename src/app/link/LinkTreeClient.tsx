@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import {
   Phone,
   FileText,
@@ -487,7 +486,7 @@ export default function LinkTreeClient({
               className="w-26 h-26 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-[#F7A8BB] via-[#F1D78B] to-[#EE7796] p-1 shadow-xl mx-auto"
             >
               <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-inner flex items-center justify-center">
-                <Image
+                <SkeletonImage
                   src="/logo.png"
                   alt={`${businessName} Logo`}
                   fill

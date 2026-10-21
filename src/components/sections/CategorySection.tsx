@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import SkeletonImage from '@/components/ui/SkeletonImage';
 import { ArrowUpRight, CheckCircle2, Sparkles, Layers, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
@@ -310,7 +310,7 @@ export default function CategorySection({
                 <div>
                   {/* Category Image with glow & active badge */}
                   <div className="relative aspect-square w-full rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-b from-[#FCFAFA] to-[#F5EFF2] mb-3 sm:mb-4 border border-[#F5E6EA] shadow-inner group-hover:shadow-md transition-shadow">
-                    <Image
+                    <SkeletonImage
                       src={cat.image || '/images/categories/standing-acrylic.png'}
                       alt={cat.name}
                       fill
