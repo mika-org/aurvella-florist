@@ -272,7 +272,7 @@ export default async function AdminDashboardPage() {
 
                         {/* Thumbnail */}
                         <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white shrink-0 border border-[#F5E2E7]">
-                          <Image src={imgUrl} alt={p.name} fill className="object-cover" />
+                          <Image src={imgUrl} alt={p.name} fill sizes="44px" className="object-cover" />
                         </div>
 
                         {/* Details */}

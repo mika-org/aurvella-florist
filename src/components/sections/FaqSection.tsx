@@ -173,7 +173,7 @@ export default function FaqSection({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="mt-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-white via-[#FFF8FA] to-white border border-[#F5D5DE] shadow-sm text-center max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="mt-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-white via-[#FFF8FA] to-white border border-[#F5D5DE] shadow-sm text-center w-full flex flex-col sm:flex-row items-center justify-between gap-4"
         >
           <div className="text-left">
             <span className="font-bold text-base text-[#2D2527] block">

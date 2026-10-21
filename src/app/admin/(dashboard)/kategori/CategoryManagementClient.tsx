@@ -190,6 +190,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
                   src={cat.image || '/images/categories/standing-acrylic.png'}
                   alt={cat.name}
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-cover"
                 />
                 <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-bold bg-white/90 backdrop-blur-sm text-[#4A3E42]">

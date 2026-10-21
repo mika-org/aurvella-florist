@@ -256,6 +256,7 @@ export default async function ProductDetailPage({
                       src={img.url}
                       alt={img.alt || product.name}
                       fill
+                      sizes="80px"
                       className="object-cover"
                     />
                   </div>

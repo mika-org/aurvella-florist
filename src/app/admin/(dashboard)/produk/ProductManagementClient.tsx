@@ -171,6 +171,7 @@ export default function ProductManagementClient({
     setCurrentPage(1);
 
     if (col === 'order' && nextDir === 'asc') setSortBy('order_asc');
+    else if (col === 'created' && nextDir === 'desc') setSortBy('created_desc');
     else if (col === 'price' && nextDir === 'asc') setSortBy('price_asc');
     else if (col === 'price' && nextDir === 'desc') setSortBy('price_desc');
     else if (col === 'name' && nextDir === 'asc') setSortBy('name_asc');
@@ -184,6 +185,9 @@ export default function ProductManagementClient({
     if (val === 'order_asc') {
       setSortColumn('order');
       setSortDir('asc');
+    } else if (val === 'created_desc') {
+      setSortColumn('created');
+      setSortDir('desc');
     } else if (val === 'price_asc') {
       setSortColumn('price');
       setSortDir('asc');
@@ -1185,7 +1189,7 @@ export default function ProductManagementClient({
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#FAF6F8] shrink-0 border border-[#F2E4E8] shadow-xs">
-                          <Image src={img} alt={p.name} fill className="object-cover" />
+                          <Image src={img} alt={p.name} fill sizes="48px" className="object-cover" />
                         </div>
                         <div className="min-w-0 max-w-xs">
                           <span className="font-bold text-[#2D2527] block truncate" title={p.name}>

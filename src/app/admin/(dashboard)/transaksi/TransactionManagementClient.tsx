@@ -829,7 +829,7 @@ export default function TransactionManagementClient({
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-10 h-10 rounded-lg overflow-hidden relative bg-[#FAF6F8] shrink-0 border border-[#F4E6EB]">
-                              <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
+                              <Image src={p.imageUrl} alt={p.name} fill sizes="40px" className="object-cover" />
                             </div>
                             <div className="min-w-0">
                               <span className="font-bold text-[#2D2527] block truncate">
