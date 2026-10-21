@@ -13,7 +13,9 @@ import {
   X,
   Loader2,
   ArrowUpDown,
+  AlertCircle,
 } from 'lucide-react';
+import { useToast } from '@/context/AdminToastContext';
 
 export interface FaqData {
   id: string;
@@ -31,6 +33,7 @@ interface Props {
 
 export default function FaqManagementClient({ initialFaqs }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [faqs, setFaqs] = useState<FaqData[]>(initialFaqs);
   const [search, setSearch] = useState('');
 
@@ -92,11 +95,17 @@ export default function FaqManagementClient({ initialFaqs }: Props) {
         throw new Error(data.error || 'Gagal menyimpan FAQ');
       }
 
+      showToast.persistSuccess(
+        editingFaq ? 'FAQ Diperbarui' : 'FAQ Ditambahkan',
+        'Pertanyaan dan jawaban FAQ berhasil disimpan.'
+      );
+
       setIsModalOpen(false);
-      router.refresh();
       window.location.reload();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan sistem');
+      const msg = err.message || 'Terjadi kesalahan sistem';
+      setErrorMsg(msg);
+      showToast.error('Gagal Menyimpan FAQ', msg);
     } finally {
       setLoading(false);
     }
@@ -115,9 +124,13 @@ export default function FaqManagementClient({ initialFaqs }: Props) {
       setFaqs((prev) =>
         prev.map((f) => (f.id === faq.id ? { ...f, isActive: !f.isActive } : f))
       );
+      showToast.success(
+        'Status FAQ Diperbarui',
+        `FAQ kini ${!faq.isActive ? 'Aktif & Ditampilkan' : 'Dinonaktifkan'}.`
+      );
       router.refresh();
     } catch {
-      alert('Gagal mengubah status aktif FAQ');
+      showToast.error('Gagal Mengubah Status', 'Gagal mengubah status aktif FAQ');
     }
   };
 
@@ -129,9 +142,10 @@ export default function FaqManagementClient({ initialFaqs }: Props) {
       if (!res.ok) throw new Error('Gagal menghapus');
 
       setFaqs((prev) => prev.filter((f) => f.id !== id));
+      showToast.success('FAQ Dihapus', `Pertanyaan FAQ "${question}" berhasil dihapus.`);
       router.refresh();
     } catch {
-      alert('Gagal menghapus FAQ');
+      showToast.error('Gagal Menghapus FAQ', 'Terjadi kesalahan saat menghapus FAQ.');
     }
   };
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { AdminToastProvider } from '@/context/AdminToastContext';
 
 export const metadata: Metadata = {
   title: 'Aurvella Florist - Admin Management',
@@ -16,5 +17,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <AdminToastProvider>{children}</AdminToastProvider>;
 }

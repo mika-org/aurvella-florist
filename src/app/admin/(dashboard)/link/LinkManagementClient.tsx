@@ -16,7 +16,9 @@ import {
   Send,
   Globe,
   MapPin,
+  AlertCircle,
 } from 'lucide-react';
+import { useToast } from '@/context/AdminToastContext';
 
 interface SocialLink {
   id: string;
@@ -35,6 +37,7 @@ interface Props {
 
 export default function LinkManagementClient({ initialLinks }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [links, setLinks] = useState<SocialLink[]>(initialLinks);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,10 +105,17 @@ export default function LinkManagementClient({ initialLinks }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan link');
 
+      showToast.persistSuccess(
+        editingItem ? 'Tautan Diperbarui' : 'Tautan Ditambahkan',
+        `Tautan "${formData.title}" berhasil disimpan.`
+      );
+
       setIsModalOpen(false);
       window.location.reload();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan sistem');
+      const msg = err.message || 'Terjadi kesalahan sistem';
+      setErrorMsg(msg);
+      showToast.error('Gagal Menyimpan Tautan', msg);
     } finally {
       setLoading(false);
     }
@@ -118,9 +128,10 @@ export default function LinkManagementClient({ initialLinks }: Props) {
       const res = await fetch(`/api/admin/links/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus');
       setLinks((prev) => prev.filter((l) => l.id !== id));
+      showToast.success('Tautan Dihapus', `Tautan "${title}" berhasil dihapus.`);
       router.refresh();
     } catch {
-      alert('Gagal menghapus link');
+      showToast.error('Gagal Menghapus Tautan', 'Terjadi kesalahan saat menghapus tautan');
     }
   };
 

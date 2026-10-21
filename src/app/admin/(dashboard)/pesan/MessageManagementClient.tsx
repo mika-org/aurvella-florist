@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Phone, Mail, Trash2, CheckCircle2, Clock, Search, MessageSquare, Bell, RefreshCw, Loader2 } from 'lucide-react';
+import { Phone, Mail, Trash2, CheckCircle2, Clock, Search, MessageSquare, Bell, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { useToast } from '@/context/AdminToastContext';
 
 interface ContactMessage {
   id: string;
@@ -21,6 +22,7 @@ interface Props {
 
 export default function MessageManagementClient({ initialMessages }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [messages, setMessages] = useState<ContactMessage[]>(initialMessages);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -127,8 +129,12 @@ export default function MessageManagementClient({ initialMessages }: Props) {
           body: 'Notifikasi browser Aurvella Florist aktif & siap menerima pesan baru.',
           icon: '/logo.png',
         });
+        showToast.success('Notifikasi Browser Aktif', 'Tes notifikasi browser berhasil dikirim.');
       } else if (perm === 'denied') {
-        alert('Izin notifikasi diblokir di browser. Silakan aktifkan izin notifikasi di setelan browser Anda (ikon gembok di sebelah kiri address bar).');
+        showToast.warning(
+          'Izin Notifikasi Diblokir',
+          'Silakan aktifkan izin notifikasi di setelan browser Anda (ikon gembok di sebelah kiri address bar).'
+        );
       }
     }
   };
@@ -145,9 +151,10 @@ export default function MessageManagementClient({ initialMessages }: Props) {
       setMessages((prev) =>
         prev.map((m) => (m.id === id ? { ...m, status: newStatus } : m))
       );
+      showToast.success('Status Pesan Diperbarui', `Status pesan diubah menjadi: ${newStatus}`);
       router.refresh();
     } catch {
-      alert('Gagal memperbarui status pesan');
+      showToast.error('Gagal Memperbarui Status', 'Terjadi kesalahan saat memperbarui status pesan');
     }
   };
 
@@ -158,9 +165,10 @@ export default function MessageManagementClient({ initialMessages }: Props) {
       const res = await fetch(`/api/admin/messages/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus');
       setMessages((prev) => prev.filter((m) => m.id !== id));
+      showToast.success('Pesan Dihapus', 'Pesan berhasil dihapus dari daftar.');
       router.refresh();
     } catch {
-      alert('Gagal menghapus pesan');
+      showToast.error('Gagal Menghapus Pesan', 'Terjadi kesalahan saat menghapus pesan');
     }
   };
 

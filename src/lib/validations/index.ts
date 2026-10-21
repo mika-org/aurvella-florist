@@ -5,12 +5,27 @@ export const adminLoginSchema = z.object({
   password: z.string().min(6, 'Password minimal 6 karakter'),
 });
 
+export const formatSlug = (val: string): string =>
+  (val || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+export const slugValidation = z
+  .string()
+  .min(2, 'Slug minimal 2 karakter')
+  .transform((val) => formatSlug(val))
+  .refine((val) => val.length >= 2, {
+    message: 'Slug minimal 2 karakter setelah diformat',
+  })
+  .refine((val) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(val), {
+    message: 'Format slug tidak valid (hanya boleh huruf kecil, angka, dan tanda hubung)',
+  });
+
 export const categorySchema = z.object({
   name: z.string().min(2, 'Nama kategori minimal 2 karakter').max(100),
-  slug: z
-    .string()
-    .min(2, 'Slug minimal 2 karakter')
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Format slug hanya boleh huruf kecil, angka, dan tanda hubung'),
+  slug: slugValidation,
   description: z.string().optional().nullable(),
   image: z.string().optional().nullable(),
   order: z.coerce.number().int().default(0),
@@ -19,10 +34,7 @@ export const categorySchema = z.object({
 
 export const productSchema = z.object({
   name: z.string().min(2, 'Nama produk minimal 2 karakter').max(150),
-  slug: z
-    .string()
-    .min(2, 'Slug minimal 2 karakter')
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Format slug tidak valid'),
+  slug: slugValidation,
   sku: z.string().optional(), // If provided manually or regenerated
   categoryId: z.string().min(1, 'Kategori wajib dipilih'),
   price: z.coerce.number().positive('Harga normal harus lebih dari 0'),

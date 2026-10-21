@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Save, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { useToast } from '@/context/AdminToastContext';
 
 interface Props {
   initialSettings: Record<string, string>;
@@ -10,6 +11,7 @@ interface Props {
 
 export default function SettingsManagementClient({ initialSettings }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [settings, setSettings] = useState(initialSettings);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -36,9 +38,12 @@ export default function SettingsManagementClient({ initialSettings }: Props) {
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan pengaturan');
 
       setSuccessMsg('Pengaturan website berhasil disimpan dan diperbarui!');
+      showToast.success('Pengaturan Disimpan', 'Pengaturan website dan profil bisnis berhasil diperbarui!');
       router.refresh();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan sistem');
+      const msg = err.message || 'Terjadi kesalahan sistem';
+      setErrorMsg(msg);
+      showToast.error('Gagal Menyimpan Pengaturan', msg);
     } finally {
       setLoading(false);
     }

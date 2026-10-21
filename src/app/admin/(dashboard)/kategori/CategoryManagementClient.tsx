@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit2, Trash2, X, Loader2, FolderTree } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Loader2, FolderTree, AlertCircle, Wand2 } from 'lucide-react';
 import ImageUploadField from '@/components/admin/ImageUploadField';
+import { useToast } from '@/context/AdminToastContext';
+import { formatSlug } from '@/lib/validations';
 
 interface Category {
   id: string;
@@ -23,6 +25,7 @@ interface Props {
 
 export default function CategoryManagementClient({ initialCategories }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>(initialCategories);
 
   // Modal State
@@ -59,7 +62,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
     setErrorMsg(null);
     setFormData({
       name: cat.name,
-      slug: cat.slug,
+      slug: formatSlug(cat.slug || cat.name),
       description: cat.description || '',
       image: cat.image || '/images/categories/standing-acrylic.png',
       order: cat.order,
@@ -69,10 +72,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
   };
 
   const handleNameChange = (name: string) => {
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    const slug = formatSlug(name);
 
     setFormData((prev) => ({
       ...prev,
@@ -86,9 +86,11 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
     setLoading(true);
     setErrorMsg(null);
 
+    const cleanSlug = formatSlug(formData.slug || formData.name);
+
     const payload = {
-      name: formData.name,
-      slug: formData.slug,
+      name: formData.name.trim(),
+      slug: cleanSlug,
       description: formData.description,
       image: formData.image,
       order: Number(formData.order),
@@ -109,13 +111,27 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Gagal menyimpan kategori');
+        let message = data.error || 'Gagal menyimpan kategori';
+        if (data.details && typeof data.details === 'object') {
+          const detailMessages = Object.entries(data.details)
+            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+            .join(' | ');
+          if (detailMessages) message = `${data.error || 'Validasi gagal'}: ${detailMessages}`;
+        }
+        throw new Error(message);
       }
+
+      showToast.persistSuccess(
+        editingCategory ? 'Kategori Diperbarui' : 'Kategori Ditambahkan',
+        `Kategori "${payload.name}" berhasil disimpan.`
+      );
 
       setIsModalOpen(false);
       window.location.reload();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan sistem');
+      const msg = err.message || 'Terjadi kesalahan sistem';
+      setErrorMsg(msg);
+      showToast.error('Gagal Menyimpan Kategori', msg);
     } finally {
       setLoading(false);
     }
@@ -129,14 +145,15 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || 'Gagal menghapus kategori');
+        showToast.error('Gagal Menghapus Kategori', data.error || 'Kategori tidak dapat dihapus');
         return;
       }
 
       setCategories((prev) => prev.filter((c) => c.id !== id));
+      showToast.success('Kategori Berhasil Dihapus', `Kategori "${name}" telah dihapus.`);
       router.refresh();
-    } catch {
-      alert('Gagal menghapus kategori');
+    } catch (err: any) {
+      showToast.error('Gagal Menghapus Kategori', err.message || 'Terjadi kesalahan sistem');
     }
   };
 
@@ -274,16 +291,38 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-semibold text-[#4A3E42] mb-1">
-                    Slug Kategori <span className="text-[#B83253]">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-[#4A3E42]">
+                      Slug Kategori <span className="text-[#B83253]">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const auto = formatSlug(formData.name || 'kategori');
+                        setFormData((prev) => ({ ...prev, slug: auto }));
+                        showToast.info('Slug Diformat', `Slug disesuaikan: ${auto}`);
+                      }}
+                      className="text-[10px] text-[#B83253] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                      title="Format slug otomatis dari Nama Kategori"
+                    >
+                      <Wand2 className="w-3 h-3" />
+                      <span>Format</span>
+                    </button>
+                  </div>
                   <input
                     type="text"
                     required
                     value={formData.slug}
-                    onChange={(e) =>
-                      setFormData({ ...formData, slug: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const sanitized = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+                      setFormData((prev) => ({ ...prev, slug: sanitized }));
+                    }}
+                    onBlur={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        slug: formatSlug(prev.slug || prev.name),
+                      }));
+                    }}
                     className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] font-mono focus:outline-none focus:border-[#B83253]"
                   />
                 </div>

@@ -30,9 +30,15 @@ import {
   RotateCcw,
   AlertCircle,
   HelpCircle,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Wand2,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 import ImageUploadField from '@/components/admin/ImageUploadField';
+import { useToast } from '@/context/AdminToastContext';
+import { formatSlug } from '@/lib/validations';
 
 interface Category {
   id: string;
@@ -60,6 +66,7 @@ interface Product {
   category: { id: string; name: string; slug: string };
   images: { id: string; url: string; alt?: string | null }[];
   order?: number;
+  createdAt?: string | Date | null;
 }
 
 interface Props {
@@ -72,7 +79,26 @@ export default function ProductManagementClient({
   categories,
 }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  // Column Sorting State (Support sorting on every table column)
+  type SortColumn =
+    | 'name'
+    | 'sku'
+    | 'category'
+    | 'price'
+    | 'promoPrice'
+    | 'totalSold'
+    | 'showOnHero'
+    | 'isFeatured'
+    | 'isPublished'
+    | 'order'
+    | 'created';
+  type SortDir = 'asc' | 'desc';
+
+  const [sortColumn, setSortColumn] = useState<SortColumn>('order');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   // Filters State
   const [search, setSearch] = useState('');
@@ -128,6 +154,88 @@ export default function ProductManagementClient({
   const totalPromo = useMemo(() => products.filter((p) => p.isPromo).length, [products]);
   const totalDraft = useMemo(() => products.filter((p) => !p.isPublished).length, [products]);
 
+  // Column Sort Handler
+  const handleColumnSort = (col: SortColumn) => {
+    let nextDir: SortDir = 'asc';
+    if (sortColumn === col) {
+      nextDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      if (['price', 'promoPrice', 'totalSold', 'created', 'showOnHero', 'isFeatured', 'isPublished'].includes(col)) {
+        nextDir = 'desc';
+      } else {
+        nextDir = 'asc';
+      }
+    }
+    setSortColumn(col);
+    setSortDir(nextDir);
+    setCurrentPage(1);
+
+    if (col === 'order' && nextDir === 'asc') setSortBy('order_asc');
+    else if (col === 'price' && nextDir === 'asc') setSortBy('price_asc');
+    else if (col === 'price' && nextDir === 'desc') setSortBy('price_desc');
+    else if (col === 'name' && nextDir === 'asc') setSortBy('name_asc');
+    else if (col === 'totalSold' && nextDir === 'desc') setSortBy('sold_desc');
+    else setSortBy('custom');
+  };
+
+  const handleDropdownSortChange = (val: string) => {
+    setSortBy(val);
+    setCurrentPage(1);
+    if (val === 'order_asc') {
+      setSortColumn('order');
+      setSortDir('asc');
+    } else if (val === 'price_asc') {
+      setSortColumn('price');
+      setSortDir('asc');
+    } else if (val === 'price_desc') {
+      setSortColumn('price');
+      setSortDir('desc');
+    } else if (val === 'name_asc') {
+      setSortColumn('name');
+      setSortDir('asc');
+    } else if (val === 'sold_desc') {
+      setSortColumn('totalSold');
+      setSortDir('desc');
+    }
+  };
+
+  const renderSortHeader = (
+    title: string,
+    col: SortColumn,
+    align: 'left' | 'center' | 'right' = 'left'
+  ) => {
+    const isActive = sortColumn === col;
+    return (
+      <button
+        type="button"
+        onClick={() => handleColumnSort(col)}
+        className={`group inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-[11px] transition-colors focus:outline-none cursor-pointer select-none py-1 px-1.5 rounded-lg hover:bg-black/5 ${
+          isActive ? 'text-[#B83253] bg-[#FAF0F3]' : 'text-[#4A3E42] hover:text-[#B83253]'
+        } ${align === 'center' ? 'mx-auto' : align === 'right' ? 'ml-auto' : ''}`}
+        title={`Urutkan berdasarkan ${title} (${isActive ? (sortDir === 'asc' ? 'Urutan Naik' : 'Urutan Turun') : 'Klik untuk mengurutkan'})`}
+      >
+        <span>{title}</span>
+        <span
+          className={`transition-all ${
+            isActive
+              ? 'opacity-100 text-[#B83253]'
+              : 'opacity-40 group-hover:opacity-80 text-gray-400'
+          }`}
+        >
+          {isActive ? (
+            sortDir === 'asc' ? (
+              <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+            ) : (
+              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
+            )
+          ) : (
+            <ArrowUpDown className="w-3.5 h-3.5" />
+          )}
+        </span>
+      </button>
+    );
+  };
+
   // Filter and Sort Logic
   const filteredAndSorted = useMemo(() => {
     let result = products.filter((p) => {
@@ -169,23 +277,49 @@ export default function ProductManagementClient({
       return true;
     });
 
-    // Sorting
+    // Sorting across any column
     result.sort((a, b) => {
-      switch (sortBy) {
-        case 'price_asc':
-          return Number(a.price) - Number(b.price);
-        case 'price_desc':
-          return Number(b.price) - Number(a.price);
-        case 'name_asc':
-          return a.name.localeCompare(b.name);
-        case 'sold_desc':
-          return (b.totalSold || 0) - (a.totalSold || 0);
-        case 'created_desc':
-          return new Date(b.slug).getTime() - new Date(a.slug).getTime(); // fallback or stable
-        case 'order_asc':
+      let comp = 0;
+      switch (sortColumn) {
+        case 'name':
+          comp = a.name.localeCompare(b.name, 'id-ID');
+          break;
+        case 'sku':
+          comp = (a.sku || '').localeCompare(b.sku || '', 'id-ID');
+          break;
+        case 'category':
+          comp = (a.category?.name || '').localeCompare(b.category?.name || '', 'id-ID');
+          break;
+        case 'price':
+          comp = Number(a.price) - Number(b.price);
+          break;
+        case 'promoPrice': {
+          const priceA = a.isPromo && a.promoPrice ? Number(a.promoPrice) : 0;
+          const priceB = b.isPromo && b.promoPrice ? Number(b.promoPrice) : 0;
+          comp = priceA - priceB;
+          break;
+        }
+        case 'totalSold':
+          comp = (Number(a.totalSold) || 0) - (Number(b.totalSold) || 0);
+          break;
+        case 'showOnHero':
+          comp = (a.showOnHero ? 1 : 0) - (b.showOnHero ? 1 : 0);
+          break;
+        case 'isFeatured':
+          comp = (a.isFeatured ? 1 : 0) - (b.isFeatured ? 1 : 0);
+          break;
+        case 'isPublished':
+          comp = (a.isPublished ? 1 : 0) - (b.isPublished ? 1 : 0);
+          break;
+        case 'created':
+          comp = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+          break;
+        case 'order':
         default:
-          return (a.order || 0) - (b.order || 0);
+          comp = (a.order || 0) - (b.order || 0);
+          break;
       }
+      return sortDir === 'asc' ? comp : -comp;
     });
 
     return result;
@@ -198,7 +332,8 @@ export default function ProductManagementClient({
     promoFilter,
     statusFilter,
     availabilityFilter,
-    sortBy,
+    sortColumn,
+    sortDir,
   ]);
 
   // Pagination calculation
@@ -280,6 +415,14 @@ export default function ProductManagementClient({
     field: 'showOnHero' | 'isFeatured' | 'isPublished' | 'isAvailable'
   ) => {
     const newValue = !product[field];
+    const fieldNames: Record<string, string> = {
+      showOnHero: 'Hero Banner Slider',
+      isFeatured: 'Produk Unggulan',
+      isPublished: 'Status Publikasi',
+      isAvailable: 'Ketersediaan Stok',
+    };
+    const label = fieldNames[field] || field;
+
     setQuickLoadingId(`${product.id}-${field}`);
 
     // Optimistic local update
@@ -295,10 +438,16 @@ export default function ProductManagementClient({
       });
 
       if (!res.ok) {
-        throw new Error('Gagal memperbarui data');
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Gagal memperbarui status');
       }
+
+      showToast.success(
+        'Status Berhasil Diperbarui',
+        `${label} untuk "${product.name}" kini ${newValue ? 'Aktif / Tayang' : 'Nonaktif / Draft'}.`
+      );
     } catch (e: any) {
-      alert(e.message || 'Gagal menyimpan perubahan');
+      showToast.error('Gagal Mengubah Status', e.message || 'Terjadi kesalahan sistem');
       // Revert on error
       setProducts((prev) =>
         prev.map((p) => (p.id === product.id ? { ...p, [field]: product[field] } : p))
@@ -364,9 +513,10 @@ export default function ProductManagementClient({
       }
 
       clearSelection();
+      showToast.success('Aksi Massal Berhasil', `Berhasil memproses ${ids.length} produk terpilih.`);
       router.refresh();
     } catch (err: any) {
-      alert(err.message || 'Terjadi kesalahan sistem saat memproses aksi massal.');
+      showToast.error('Aksi Massal Gagal', err.message || 'Terjadi kesalahan sistem saat memproses aksi massal.');
     } finally {
       setBulkLoading(false);
     }
@@ -375,12 +525,15 @@ export default function ProductManagementClient({
   const handleCopySku = (sku: string) => {
     navigator.clipboard.writeText(sku);
     setCopiedSku(sku);
+    showToast.info('SKU Disalin', `Kode SKU ${sku} disalin ke clipboard.`);
     setTimeout(() => setCopiedSku(null), 2000);
   };
 
   const openCreateModal = () => {
     setEditingProduct(null);
     setErrorMsg(null);
+    // Randomize sold between 7 and 100 for newly created product
+    const randomSold = Math.floor(Math.random() * (100 - 7 + 1)) + 7;
     setFormData({
       name: '',
       slug: '',
@@ -394,7 +547,7 @@ export default function ProductManagementClient({
       isAvailable: true,
       isPublished: true,
       showOnHero: false,
-      totalSold: 0,
+      totalSold: randomSold,
       description: '',
       specifications: '',
       imageUrl: '/images/categories/standing-acrylic.png',
@@ -405,9 +558,13 @@ export default function ProductManagementClient({
   const openEditModal = (p: Product) => {
     setEditingProduct(p);
     setErrorMsg(null);
+    // Ensure clean slug and randomized sold if it was 0
+    const cleanSlug = formatSlug(p.slug || p.name);
+    const sold = p.totalSold && p.totalSold > 0 ? p.totalSold : Math.floor(Math.random() * (100 - 7 + 1)) + 7;
+
     setFormData({
       name: p.name,
-      slug: p.slug,
+      slug: cleanSlug,
       sku: p.sku,
       categoryId: p.categoryId,
       price: p.price,
@@ -418,7 +575,7 @@ export default function ProductManagementClient({
       isAvailable: p.isAvailable,
       isPublished: p.isPublished,
       showOnHero: Boolean(p.showOnHero),
-      totalSold: p.totalSold || 0,
+      totalSold: sold,
       description: p.description || '',
       specifications: p.specifications || '',
       imageUrl: p.images[0]?.url || '/images/categories/standing-acrylic.png',
@@ -427,10 +584,7 @@ export default function ProductManagementClient({
   };
 
   const handleNameChange = (name: string) => {
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    const slug = formatSlug(name);
 
     setFormData((prev) => ({
       ...prev,
@@ -444,10 +598,13 @@ export default function ProductManagementClient({
     setLoading(true);
     setErrorMsg(null);
 
+    const cleanSlug = formatSlug(formData.slug || formData.name);
+    const soldCount = Math.max(0, parseInt(String(formData.totalSold), 10) || 0);
+
     const payload = {
-      name: formData.name,
-      slug: formData.slug,
-      sku: formData.sku || undefined,
+      name: formData.name.trim(),
+      slug: cleanSlug,
+      sku: formData.sku?.trim() || undefined,
       categoryId: formData.categoryId,
       price: Number(formData.price),
       promoPrice: formData.isPromo && formData.promoPrice ? Number(formData.promoPrice) : null,
@@ -457,7 +614,7 @@ export default function ProductManagementClient({
       isAvailable: formData.isAvailable,
       isPublished: formData.isPublished,
       showOnHero: formData.showOnHero,
-      totalSold: Math.max(0, parseInt(String(formData.totalSold), 10) || 0),
+      totalSold: soldCount > 0 ? soldCount : Math.floor(Math.random() * (100 - 7 + 1)) + 7,
       description: formData.description,
       specifications: formData.specifications,
       images: [{ url: formData.imageUrl, alt: formData.name, isPrimary: true }],
@@ -477,14 +634,29 @@ export default function ProductManagementClient({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Gagal menyimpan produk');
+        let message = data.error || 'Gagal menyimpan produk';
+        if (data.details && typeof data.details === 'object') {
+          const detailMessages = Object.entries(data.details)
+            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+            .join(' | ');
+          if (detailMessages) {
+            message = `${data.error || 'Validasi data gagal'}: ${detailMessages}`;
+          }
+        }
+        throw new Error(message);
       }
 
+      showToast.persistSuccess(
+        editingProduct ? 'Produk Berhasil Diperbarui' : 'Produk Berhasil Ditambahkan',
+        `Produk "${payload.name}" berhasil disimpan ke sistem katalog.`
+      );
+
       setIsModalOpen(false);
-      router.refresh();
       window.location.reload();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan sistem');
+      const msg = err.message || 'Terjadi kesalahan sistem';
+      setErrorMsg(msg);
+      showToast.error('Gagal Menyimpan Produk', msg);
     } finally {
       setLoading(false);
     }
@@ -495,11 +667,15 @@ export default function ProductManagementClient({
 
     try {
       const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Gagal menghapus');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Gagal menghapus');
+      }
       setProducts((prev) => prev.filter((p) => p.id !== id));
+      showToast.success('Produk Berhasil Dihapus', `Produk "${name}" telah berhasil dihapus dari katalog.`);
       router.refresh();
-    } catch {
-      alert('Gagal menghapus produk');
+    } catch (err: any) {
+      showToast.error('Gagal Menghapus Produk', err.message || 'Terjadi kesalahan saat menghapus produk.');
     }
   };
 
@@ -679,17 +855,16 @@ export default function ProductManagementClient({
             </span>
             <select
               value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => handleDropdownSortChange(e.target.value)}
               className="px-3 py-2 rounded-xl border border-[#E8D9DC] text-xs bg-white text-[#2D2527] focus:outline-none focus:border-[#B83253]"
             >
               <option value="order_asc">Urutan Default Katalog</option>
+              <option value="created_desc">Terbaru Ditambahkan</option>
               <option value="price_asc">Harga: Termurah &rarr; Termahal</option>
               <option value="price_desc">Harga: Termahal &rarr; Termurah</option>
               <option value="name_asc">Nama Produk: A &rarr; Z</option>
               <option value="sold_desc">Terlaris (Total Sold)</option>
+              {sortBy === 'custom' && <option value="custom">Kustom (Header Kolom)</option>}
             </select>
           </div>
         </div>
@@ -951,15 +1126,31 @@ export default function ProductManagementClient({
                     )}
                   </button>
                 </th>
-                <th className="py-3.5 px-4">Produk</th>
-                <th className="py-3.5 px-4">SKU</th>
-                <th className="py-3.5 px-4">Kategori</th>
-                <th className="py-3.5 px-4">Harga Normal</th>
-                <th className="py-3.5 px-4">Harga Promo</th>
-                <th className="py-3.5 px-4 text-center">Terjual</th>
-                <th className="py-3.5 px-4 text-center">Hero Slider</th>
-                <th className="py-3.5 px-4 text-center">Unggulan</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
+                <th className="py-3.5 px-4">{renderSortHeader('Produk', 'name', 'left')}</th>
+                <th className="py-3.5 px-4">{renderSortHeader('SKU', 'sku', 'left')}</th>
+                <th className="py-3.5 px-4">{renderSortHeader('Kategori', 'category', 'left')}</th>
+                <th className="py-3.5 px-4">{renderSortHeader('Harga Normal', 'price', 'left')}</th>
+                <th className="py-3.5 px-4">{renderSortHeader('Harga Promo', 'promoPrice', 'left')}</th>
+                <th className="py-3.5 px-4 text-center">
+                  <div className="flex justify-center">
+                    {renderSortHeader('Terjual', 'totalSold', 'center')}
+                  </div>
+                </th>
+                <th className="py-3.5 px-4 text-center">
+                  <div className="flex justify-center">
+                    {renderSortHeader('Hero Slider', 'showOnHero', 'center')}
+                  </div>
+                </th>
+                <th className="py-3.5 px-4 text-center">
+                  <div className="flex justify-center">
+                    {renderSortHeader('Unggulan', 'isFeatured', 'center')}
+                  </div>
+                </th>
+                <th className="py-3.5 px-4 text-center">
+                  <div className="flex justify-center">
+                    {renderSortHeader('Status', 'isPublished', 'center')}
+                  </div>
+                </th>
                 <th className="py-3.5 px-4 text-right">Aksi</th>
               </tr>
             </thead>
@@ -1330,9 +1521,12 @@ export default function ProductManagementClient({
             </div>
 
             {errorMsg && (
-              <div className="mb-6 p-4 rounded-xl bg-[#FDEEEF] border border-[#B83253]/30 text-[#B83253] text-xs flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{errorMsg}</span>
+              <div className="mb-6 p-4 rounded-2xl bg-[#FDEEEF] border border-[#B83253]/30 text-[#B83253] text-xs flex items-start gap-3 shadow-xs">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="font-bold">Terjadi Kesalahan Validasi:</div>
+                  <div className="mt-0.5 leading-relaxed whitespace-pre-wrap">{errorMsg}</div>
+                </div>
               </div>
             )}
 
@@ -1360,16 +1554,44 @@ export default function ProductManagementClient({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#4A3E42] mb-1">
-                    URL Slug <span className="text-[#B83253]">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-[#4A3E42]">
+                      URL Slug <span className="text-[#B83253]">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const auto = formatSlug(formData.name || 'produk-standing');
+                        setFormData((prev) => ({ ...prev, slug: auto }));
+                        showToast.info('Slug Diformat', `Slug disesuaikan: ${auto}`);
+                      }}
+                      className="text-[10px] text-[#B83253] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                      title="Format slug otomatis dari Nama Produk"
+                    >
+                      <Wand2 className="w-3 h-3" />
+                      <span>Format Otomatis</span>
+                    </button>
+                  </div>
                   <input
                     type="text"
                     required
                     value={formData.slug}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
+                    onChange={(e) => {
+                      const sanitized = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+                      setFormData((prev) => ({ ...prev, slug: sanitized }));
+                    }}
+                    onBlur={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        slug: formatSlug(prev.slug || prev.name),
+                      }));
+                    }}
+                    placeholder="contoh: standing-acrylic-rose"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8D9DC] text-xs font-mono focus:outline-none focus:border-[#B83253]"
                   />
+                  <p className="text-[10px] text-[#8A7E82] mt-1">
+                    Hanya huruf kecil, angka, dan tanda hubung tunggal (contoh: standing-acrylic-rose).
+                  </p>
                 </div>
               </div>
 

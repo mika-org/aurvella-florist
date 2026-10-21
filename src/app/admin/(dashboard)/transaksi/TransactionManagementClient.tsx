@@ -24,8 +24,10 @@ import {
   ArrowRight,
   Trash2,
   Edit2,
+  AlertCircle,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
+import { useToast } from '@/context/AdminToastContext';
 
 export interface TransactionItemData {
   id: string;
@@ -77,6 +79,7 @@ export default function TransactionManagementClient({
   initialTransactions,
 }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [transactions, setTransactions] = useState<TransactionData[]>(initialTransactions);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -314,9 +317,10 @@ export default function TransactionManagementClient({
         setIsDetailModalOpen(false);
         setSelectedTx(null);
       }
+      showToast.success('Transaksi Dihapus', `Transaksi ${tx.invoiceNumber} (${tx.customerName}) telah dihapus.`);
       router.refresh();
     } catch (err: any) {
-      alert(err.message || 'Gagal menghapus transaksi');
+      showToast.error('Gagal Menghapus Transaksi', err.message || 'Terjadi kesalahan sistem.');
     } finally {
       setIsDeletingId(null);
     }
@@ -326,6 +330,7 @@ export default function TransactionManagementClient({
     e.preventDefault();
     if (items.length === 0) {
       setErrorMsg('Pilih atau masukkan minimal 1 produk pesanan.');
+      showToast.warning('Pesanan Kosong', 'Pilih atau masukkan minimal 1 produk pesanan.');
       return;
     }
 
@@ -360,15 +365,28 @@ export default function TransactionManagementClient({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Gagal menyimpan transaksi');
+        let message = data.error || 'Gagal menyimpan transaksi';
+        if (data.details && typeof data.details === 'object') {
+          const detailMessages = Object.entries(data.details)
+            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+            .join(' | ');
+          if (detailMessages) message = `${data.error || 'Validasi gagal'}: ${detailMessages}`;
+        }
+        throw new Error(message);
       }
+
+      showToast.persistSuccess(
+        editingTxId ? 'Transaksi Diperbarui' : 'Transaksi Baru Tercatat',
+        `Transaksi untuk ${customerName} berhasil disimpan ke sistem.`
+      );
 
       setIsCreateModalOpen(false);
       setEditingTxId(null);
-      router.refresh();
       window.location.reload();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
+      const msg = err.message || 'Terjadi kesalahan sistem.';
+      setErrorMsg(msg);
+      showToast.error('Gagal Menyimpan Transaksi', msg);
     } finally {
       setIsSaving(false);
     }
@@ -377,9 +395,10 @@ export default function TransactionManagementClient({
   // Download Excel Rekap
   const handleDownloadExcel = async () => {
     setIsDownloading(true);
+    showToast.info('Mengunduh Rekap...', 'Sedang menyiapkan data transaksi CSV.');
     try {
       const res = await fetch('/api/admin/transactions/export');
-      if (!res.ok) throw new Error('Gagal mengunduh rekap');
+      if (!res.ok) throw new Error('Gagal mengunduh rekap transaksi');
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -391,8 +410,9 @@ export default function TransactionManagementClient({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      showToast.success('Unduhan Selesai', `File ${a.download} berhasil diunduh.`);
     } catch (err: any) {
-      alert(err.message || 'Gagal download Excel');
+      showToast.error('Gagal Mengunduh Rekap', err.message || 'Terjadi kesalahan saat download Excel/CSV');
     } finally {
       setIsDownloading(false);
     }

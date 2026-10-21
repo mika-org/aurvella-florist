@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Star, X, Loader2 } from 'lucide-react';
+import { useToast } from '@/context/AdminToastContext';
 
 interface Testimonial {
   id: string;
@@ -20,6 +21,7 @@ interface Props {
 
 export default function TestimonialManagementClient({ initialTestimonials }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,9 +79,13 @@ export default function TestimonialManagementClient({ initialTestimonials }: Pro
           item.id === t.id ? { ...item, isApproved: !item.isApproved } : item
         )
       );
+      showToast.success(
+        'Status Testimoni Diperbarui',
+        `Testimoni dari "${t.customerName}" kini ${!t.isApproved ? 'Disetujui & Tampil' : 'Disembunyikan'}.`
+      );
       router.refresh();
     } catch {
-      alert('Gagal mengubah status publikasi testimoni');
+      showToast.error('Gagal Mengubah Status', 'Gagal mengubah status publikasi testimoni');
     }
   };
 
@@ -103,10 +109,17 @@ export default function TestimonialManagementClient({ initialTestimonials }: Pro
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan testimoni');
 
+      showToast.persistSuccess(
+        editingItem ? 'Testimoni Diperbarui' : 'Testimoni Ditambahkan',
+        `Testimoni dari "${formData.customerName}" berhasil disimpan.`
+      );
+
       setIsModalOpen(false);
       window.location.reload();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan');
+      const msg = err.message || 'Terjadi kesalahan';
+      setErrorMsg(msg);
+      showToast.error('Gagal Menyimpan Testimoni', msg);
     } finally {
       setLoading(false);
     }
@@ -119,9 +132,10 @@ export default function TestimonialManagementClient({ initialTestimonials }: Pro
       const res = await fetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus');
       setTestimonials((prev) => prev.filter((t) => t.id !== id));
+      showToast.success('Testimoni Dihapus', `Testimoni dari "${name}" berhasil dihapus.`);
       router.refresh();
     } catch {
-      alert('Gagal menghapus testimoni');
+      showToast.error('Gagal Menghapus Testimoni', 'Gagal menghapus data testimoni');
     }
   };
 

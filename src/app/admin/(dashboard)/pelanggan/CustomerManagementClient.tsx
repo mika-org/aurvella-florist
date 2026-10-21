@@ -20,6 +20,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
+import { useToast } from '@/context/AdminToastContext';
 
 export interface CustomerData {
   id: string;
@@ -40,6 +41,7 @@ interface Props {
 
 export default function CustomerManagementClient({ initialCustomers }: Props) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [customers, setCustomers] = useState<CustomerData[]>(initialCustomers);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'orders' | 'spent' | 'recent' | 'name'>('orders');
@@ -139,10 +141,16 @@ export default function CustomerManagementClient({ initialCustomers }: Props) {
         setCustomers((prev) => [data.customer, ...prev]);
       }
 
+      showToast.success(
+        editingCustomer ? 'Data Pelanggan Diperbarui' : 'Pelanggan Baru Ditambahkan',
+        `Data ${formData.name} berhasil disimpan.`
+      );
+
       setIsModalOpen(false);
       router.refresh();
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.message || 'Terjadi kesalahan');
+      showToast.error('Gagal Menyimpan Pelanggan', err.message || 'Terjadi kesalahan');
     } finally {
       setLoading(false);
     }
@@ -158,9 +166,10 @@ export default function CustomerManagementClient({ initialCustomers }: Props) {
         throw new Error(data.error || 'Gagal menghapus');
       }
       setCustomers((prev) => prev.filter((c) => c.id !== id));
+      showToast.success('Pelanggan Dihapus', `Data pelanggan "${name}" berhasil dihapus.`);
       router.refresh();
     } catch (err: any) {
-      alert(err.message);
+      showToast.error('Gagal Menghapus Pelanggan', err.message || 'Terjadi kesalahan');
     }
   };
 

@@ -20,8 +20,12 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 
     const parseResult = productSchema.safeParse(body);
     if (!parseResult.success) {
+      const fieldErrors = parseResult.error.flatten().fieldErrors;
+      const errorSummary = Object.entries(fieldErrors)
+        .map(([field, errs]) => `${field}: ${(errs || []).join(', ')}`)
+        .join('; ');
       return NextResponse.json(
-        { error: 'Validasi data gagal', details: parseResult.error.flatten().fieldErrors },
+        { error: errorSummary ? `Validasi data gagal (${errorSummary})` : 'Validasi data gagal', details: fieldErrors },
         { status: 400 }
       );
     }
@@ -71,8 +75,9 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
         specifications: data.specifications || null,
         order: data.order,
         seoTitle: data.seoTitle || null,
-        seoDescription: data.seoDescription || null,
-        ...(data.totalSold !== undefined ? { totalSold: data.totalSold } : {}),
+        ...(data.totalSold !== undefined
+          ? { totalSold: data.totalSold > 0 ? data.totalSold : Math.floor(Math.random() * (100 - 7 + 1)) + 7 }
+          : {}),
         ...(data.sku ? { sku: data.sku } : {}),
       },
     });
