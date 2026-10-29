@@ -25,6 +25,9 @@ import {
   Trash2,
   Edit2,
   AlertCircle,
+  Truck,
+  XCircle,
+  RotateCcw,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 import { useToast } from '@/context/AdminToastContext';
@@ -99,7 +102,7 @@ export default function TransactionManagementClient({
   const [senderName, setSenderName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('TRANSFER');
   const [paymentStatus, setPaymentStatus] = useState('PAID');
-  const [orderStatus, setOrderStatus] = useState('COMPLETED');
+  const [orderStatus, setOrderStatus] = useState('PROCESSING');
   const [notes, setNotes] = useState('');
   const [customDate, setCustomDate] = useState(() =>
     new Date().toISOString().slice(0, 16)
@@ -118,16 +121,15 @@ export default function TransactionManagementClient({
     }[]
   >([]);
 
-  // SKU & Product Search in Modal
-  const [skuInput, setSkuInput] = useState('');
+  // Product Search in Modal
   const [searchProductQuery, setSearchProductQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ProductSearchResult[]>([]);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
-  const [skuSearchError, setSkuSearchError] = useState<string | null>(null);
 
   // Loading & Error states
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isUpdatingStatusId, setIsUpdatingStatusId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Calculate Aggregates
@@ -150,27 +152,91 @@ export default function TransactionManagementClient({
   });
   const topProduct = Object.values(productCountMap).sort((a, b) => b.qty - a.qty)[0];
 
-  // Search by SKU handler
-  const handleGetBySku = async () => {
-    if (!skuInput.trim()) return;
-    setIsSearchingProduct(true);
-    setSkuSearchError(null);
-
+  // Status Lifecycle Update Handler
+  const handleUpdateStatus = async (txId: string, nextStatus: string) => {
+    setIsUpdatingStatusId(txId);
     try {
-      const res = await fetch(`/api/admin/products/search?sku=${encodeURIComponent(skuInput.trim())}`);
-      const data = await res.json();
+      const res = await fetch(`/api/admin/transactions/${txId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderStatus: nextStatus }),
+      });
 
-      if (!res.ok || !data.product) {
-        setSkuSearchError(data.message || 'Produk dengan SKU tersebut tidak ditemukan.');
-        return;
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal mengubah status pesanan');
       }
 
-      addProductToItems(data.product);
-      setSkuInput('');
-    } catch {
-      setSkuSearchError('Gagal mencari produk.');
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === txId ? { ...t, orderStatus: nextStatus } : t))
+      );
+
+      if (selectedTx?.id === txId) {
+        setSelectedTx((prev) => (prev ? { ...prev, orderStatus: nextStatus } : null));
+      }
+
+      const statusLabels: Record<string, string> = {
+        PROCESSING: 'Diproses',
+        DELIVERING: 'Sedang Dikirim',
+        COMPLETED: 'Selesai',
+        CANCELLED: 'Dibatalkan',
+      };
+
+      showToast.success(
+        'Status Pesanan Diperbarui',
+        `Status pesanan berhasil diubah menjadi "${statusLabels[nextStatus] || nextStatus}".`
+      );
+      router.refresh();
+    } catch (err: any) {
+      showToast.error('Gagal Memperbarui Status', err.message || 'Terjadi kesalahan sistem.');
     } finally {
-      setIsSearchingProduct(false);
+      setIsUpdatingStatusId(null);
+    }
+  };
+
+  const handleCancelOrder = async (txId: string) => {
+    if (!confirm('Yakin ingin membatalkan pesanan ini? Status pesanan akan diubah menjadi "Dibatalkan".')) {
+      return;
+    }
+    await handleUpdateStatus(txId, 'CANCELLED');
+  };
+
+  const renderStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PROCESSING':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FFF9ED] text-[#8E6D14] border border-[#F5E0A3]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#8E6D14] animate-pulse" />
+            Diproses
+          </span>
+        );
+      case 'DELIVERING':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE]">
+            <Truck className="w-3.5 h-3.5 text-[#1D4ED8]" />
+            Dikirim
+          </span>
+        );
+      case 'COMPLETED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#E8F8EE] text-[#1E7E34] border border-[#C3E6CB]">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#1E7E34]" />
+            Selesai
+          </span>
+        );
+      case 'CANCELLED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+            <XCircle className="w-3.5 h-3.5 text-[#DC2626]" />
+            Dibatalkan
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#F3F4F6] text-[#4B5563] border border-[#E5E7EB]">
+            {status}
+          </span>
+        );
     }
   };
 
@@ -245,14 +311,12 @@ export default function TransactionManagementClient({
     setSenderName('');
     setPaymentMethod('TRANSFER');
     setPaymentStatus('PAID');
-    setOrderStatus('COMPLETED');
+    setOrderStatus('PROCESSING');
     setNotes('');
     setCustomDate(new Date().toISOString().slice(0, 16));
     setItems([]);
-    setSkuInput('');
     setSearchProductQuery('');
     setSearchResults([]);
-    setSkuSearchError(null);
     setErrorMsg(null);
     setIsCreateModalOpen(true);
   };
@@ -284,10 +348,8 @@ export default function TransactionManagementClient({
         imageUrl: it.product?.images?.[0]?.url || '/images/categories/standing-acrylic.png',
       }))
     );
-    setSkuInput('');
     setSearchProductQuery('');
     setSearchResults([]);
-    setSkuSearchError(null);
     setErrorMsg(null);
     setIsDetailModalOpen(false);
     setIsCreateModalOpen(true);
@@ -445,7 +507,7 @@ export default function TransactionManagementClient({
             Data Transaksi &amp; Penjualan
           </h1>
           <p className="text-xs sm:text-sm text-[#7A6D72] mt-1">
-            Kelola transaksi masuk, input order menggunakan SKU produk, dan unduh rekap Excel.
+            Kelola transaksi masuk, alur status pesanan, dan unduh rekap Excel.
           </p>
         </div>
 
@@ -655,31 +717,87 @@ export default function TransactionManagementClient({
 
                     {/* Status */}
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          tx.orderStatus === 'COMPLETED'
-                            ? 'bg-[#E8F8EE] text-[#1E7E34]'
-                            : tx.orderStatus === 'PROCESSING'
-                            ? 'bg-[#FFF9ED] text-[#8E6D14]'
-                            : 'bg-[#FDEEEF] text-[#B83253]'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            tx.orderStatus === 'COMPLETED'
-                              ? 'bg-[#1E7E34]'
-                              : tx.orderStatus === 'PROCESSING'
-                              ? 'bg-[#8E6D14]'
-                              : 'bg-[#B83253]'
-                          }`}
-                        />
-                        {tx.orderStatus}
-                      </span>
+                      {renderStatusBadge(tx.orderStatus)}
                     </td>
 
                     {/* Actions */}
                     <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1.5">
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {/* Alur Aksi Update Status Pesanan */}
+                        {tx.orderStatus === 'PROCESSING' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(tx.id, 'DELIVERING')}
+                              disabled={isUpdatingStatusId === tx.id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#0284C7] hover:bg-[#0369A1] shadow-sm hover:scale-[1.02] transition-all disabled:opacity-50"
+                              title="Lanjutkan Proses ke Status Dikirim"
+                            >
+                              {isUpdatingStatusId === tx.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Truck className="w-3.5 h-3.5" />
+                              )}
+                              <span>Lanjutkan Proses</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleCancelOrder(tx.id)}
+                              disabled={isUpdatingStatusId === tx.id}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#DC2626] bg-[#FEF2F2] hover:bg-[#FEE2E2] border border-[#FECACA] transition-all disabled:opacity-50"
+                              title="Batalkan Pesanan (Cancel)"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              <span>Cancel</span>
+                            </button>
+                          </>
+                        )}
+
+                        {tx.orderStatus === 'DELIVERING' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(tx.id, 'COMPLETED')}
+                              disabled={isUpdatingStatusId === tx.id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#16A34A] hover:bg-[#15803D] shadow-sm hover:scale-[1.02] transition-all disabled:opacity-50"
+                              title="Lanjutkan Proses ke Status Selesai"
+                            >
+                              {isUpdatingStatusId === tx.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                              )}
+                              <span>Lanjutkan Proses</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleCancelOrder(tx.id)}
+                              disabled={isUpdatingStatusId === tx.id}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#DC2626] bg-[#FEF2F2] hover:bg-[#FEE2E2] border border-[#FECACA] transition-all disabled:opacity-50"
+                              title="Batalkan Pesanan (Cancel)"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              <span>Cancel</span>
+                            </button>
+                          </>
+                        )}
+
+                        {tx.orderStatus === 'CANCELLED' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStatus(tx.id, 'PROCESSING')}
+                            disabled={isUpdatingStatusId === tx.id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#7A6D72] bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-[#E5E5E5] transition-all disabled:opacity-50"
+                            title="Pulihkan pesanan ke status Diproses"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Pulihkan</span>
+                          </button>
+                        )}
+
+                        {/* Divider */}
+                        <div className="h-4 w-px bg-[#E8D9DC] mx-1" />
+
                         <button
                           type="button"
                           onClick={() => {
@@ -736,8 +854,8 @@ export default function TransactionManagementClient({
                 </h2>
                 <span className="text-xs text-[#7A6D72]">
                   {editingTxId
-                    ? 'Perbarui rincian pembeli, item produk, atau status pembayaran dan pesanan.'
-                    : 'Pilih produk via pencarian atau masukkan SKU produk secara instan.'}
+                    ? 'Perbarui rincian pembeli, item produk, atau rincian pesanan.'
+                    : 'Pilih produk standing flower dari katalog dan masukkan rincian pembeli.'}
                 </span>
               </div>
               <button
@@ -756,67 +874,27 @@ export default function TransactionManagementClient({
             )}
 
             <form onSubmit={handleSaveTransaction} className="space-y-6 text-xs">
-              {/* SECTION: PRODUCT SELECTION VIA SKU OR SEARCH */}
+              {/* SECTION: PRODUCT SELECTION */}
               <div className="p-4 rounded-2xl bg-[#FFF8FA] border border-[#F8E1E7] space-y-4">
                 <span className="font-bold text-[#B83253] text-xs uppercase tracking-wider block">
-                  1. Pilih Produk Standing Flower (Via SKU atau Pencarian)
+                  1. Pilih Produk Standing Flower
                 </span>
 
-                {/* SKU Quick Lookup */}
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                  <div className="sm:col-span-8">
-                    <label className="block font-semibold text-[#4A3E42] mb-1">
-                      Ketik SKU Produk
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Contoh: ACR-20261011-A8K2"
-                      value={skuInput}
-                      onChange={(e) => setSkuInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleGetBySku();
-                        }
-                      }}
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs font-mono focus:outline-none focus:border-[#B83253]"
-                    />
-                  </div>
-                  <div className="sm:col-span-4">
-                    <button
-                      type="button"
-                      onClick={handleGetBySku}
-                      disabled={isSearchingProduct || !skuInput.trim()}
-                      className="w-full py-2 px-3 rounded-xl font-bold text-xs text-white bg-[#B83253] hover:bg-[#a02b48] disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      {isSearchingProduct ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Search className="w-3.5 h-3.5" />
-                      )}
-                      <span>Get Produk by SKU</span>
-                    </button>
-                  </div>
-                </div>
-
-                {skuSearchError && (
-                  <p className="text-[11px] text-[#EF4444] font-medium">
-                    {skuSearchError}
-                  </p>
-                )}
-
-                {/* Or Search by Name */}
+                {/* Search Product */}
                 <div className="relative">
                   <label className="block font-semibold text-[#4A3E42] mb-1">
-                    Atau Cari Nama Produk Standing Flower
+                    Cari Produk Standing Flower
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Ketik nama produk, misal: 'Blooming Pastel' atau 'Luxury Arch'..."
-                    value={searchProductQuery}
-                    onChange={(e) => handleLiveSearch(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
-                  />
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-[#8A7E82] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Ketik nama bunga atau kata kunci standing flower..."
+                      value={searchProductQuery}
+                      onChange={(e) => handleLiveSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
+                    />
+                  </div>
 
                   {/* Dropdown Search Results */}
                   {searchResults.length > 0 && (
@@ -1004,7 +1082,7 @@ export default function TransactionManagementClient({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-semibold text-[#4A3E42] mb-1">
                       Metode Pembayaran
@@ -1023,22 +1101,6 @@ export default function TransactionManagementClient({
 
                   <div>
                     <label className="block font-semibold text-[#4A3E42] mb-1">
-                      Status Pesanan
-                    </label>
-                    <select
-                      value={orderStatus}
-                      onChange={(e) => setOrderStatus(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs bg-white focus:outline-none focus:border-[#B83253]"
-                    >
-                      <option value="COMPLETED">Selesai (Completed)</option>
-                      <option value="PROCESSING">Sedang Diproses</option>
-                      <option value="DELIVERING">Sedang Dikirim</option>
-                      <option value="CANCELLED">Dibatalkan</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-[#4A3E42] mb-1">
                       Tanggal &amp; Waktu Transaksi
                     </label>
                     <input
@@ -1049,6 +1111,18 @@ export default function TransactionManagementClient({
                     />
                   </div>
                 </div>
+
+                {editingTxId && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF6F8] border border-[#F2E4E8]">
+                    <span className="text-xs text-[#7A6D72] font-semibold">Status Pesanan Saat Ini:</span>
+                    <div className="flex items-center gap-2">
+                      {renderStatusBadge(orderStatus)}
+                      <span className="text-[10px] text-[#8A7E82] hidden sm:inline">
+                        (Status diubah melalui tombol aksi pada tabel atau nota)
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block font-semibold text-[#4A3E42] mb-1">
@@ -1123,12 +1197,108 @@ export default function TransactionManagementClient({
                   <span className="text-[#7A6D72]">Tanggal:</span>
                   <span>{new Date(selectedTx.transactionDate).toLocaleString('id-ID')}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#7A6D72]">Metode &amp; Status:</span>
-                  <span className="font-semibold text-[#8E6D14]">
-                    {selectedTx.paymentMethod} • {selectedTx.orderStatus}
+                <div className="flex justify-between items-center">
+                  <span className="text-[#7A6D72]">Metode Pembayaran:</span>
+                  <span className="font-semibold text-[#4A3E42]">
+                    {selectedTx.paymentMethod} ({selectedTx.paymentStatus})
                   </span>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#7A6D72]">Status Pesanan:</span>
+                  <div>{renderStatusBadge(selectedTx.orderStatus)}</div>
+                </div>
+              </div>
+
+              {/* Status Workflow Action Box */}
+              <div className="p-3.5 rounded-2xl bg-[#FAF6F8] border border-[#F2E4E8] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#4A3E42]">Alur Status Pesanan</span>
+                  <span className="text-[11px] text-[#7A6D72]">
+                    {selectedTx.orderStatus === 'PROCESSING' && 'Tahap 1: Persiapan Rangkaian'}
+                    {selectedTx.orderStatus === 'DELIVERING' && 'Tahap 2: Pengantaran Kurir'}
+                    {selectedTx.orderStatus === 'COMPLETED' && 'Tahap 3: Pesanan Selesai'}
+                    {selectedTx.orderStatus === 'CANCELLED' && 'Status: Dibatalkan'}
+                  </span>
+                </div>
+
+                {selectedTx.orderStatus === 'PROCESSING' && (
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus(selectedTx.id, 'DELIVERING')}
+                      disabled={isUpdatingStatusId === selectedTx.id}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white bg-[#0284C7] hover:bg-[#0369A1] shadow-sm transition-all disabled:opacity-50"
+                    >
+                      {isUpdatingStatusId === selectedTx.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Truck className="w-3.5 h-3.5" />
+                      )}
+                      <span>Lanjutkan Proses (Kirim)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCancelOrder(selectedTx.id)}
+                      disabled={isUpdatingStatusId === selectedTx.id}
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-[#DC2626] bg-[#FEF2F2] hover:bg-[#FEE2E2] border border-[#FECACA] transition-all disabled:opacity-50"
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span>Batalkan (Cancel)</span>
+                    </button>
+                  </div>
+                )}
+
+                {selectedTx.orderStatus === 'DELIVERING' && (
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus(selectedTx.id, 'COMPLETED')}
+                      disabled={isUpdatingStatusId === selectedTx.id}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white bg-[#16A34A] hover:bg-[#15803D] shadow-sm transition-all disabled:opacity-50"
+                    >
+                      {isUpdatingStatusId === selectedTx.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>Lanjutkan Proses (Selesai)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCancelOrder(selectedTx.id)}
+                      disabled={isUpdatingStatusId === selectedTx.id}
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-[#DC2626] bg-[#FEF2F2] hover:bg-[#FEE2E2] border border-[#FECACA] transition-all disabled:opacity-50"
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span>Batalkan (Cancel)</span>
+                    </button>
+                  </div>
+                )}
+
+                {selectedTx.orderStatus === 'COMPLETED' && (
+                  <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#C3E6CB] flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#1E7E34] shrink-0" />
+                    <span className="font-bold text-[#1E7E34] text-xs">Pesanan telah berhasil diselesaikan.</span>
+                  </div>
+                )}
+
+                {selectedTx.orderStatus === 'CANCELLED' && (
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#FEF2F2] border border-[#FECACA]">
+                    <div className="flex items-center gap-2">
+                      <XCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
+                      <span className="font-bold text-[#DC2626] text-xs">Pesanan dibatalkan.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus(selectedTx.id, 'PROCESSING')}
+                      disabled={isUpdatingStatusId === selectedTx.id}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#7A6D72] bg-white border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-all"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Pulihkan ke Diproses</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {selectedTx.customerAddress && (

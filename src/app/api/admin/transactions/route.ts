@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       senderName,
       paymentMethod = 'TRANSFER',
       paymentStatus = 'PAID',
-      orderStatus = 'COMPLETED',
+      orderStatus = 'PROCESSING',
       notes,
       items,
       customDate,

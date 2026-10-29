@@ -80,7 +80,7 @@ export async function PUT(
       senderName,
       paymentMethod = 'TRANSFER',
       paymentStatus = 'PAID',
-      orderStatus = 'COMPLETED',
+      orderStatus = existingTx.orderStatus || 'PROCESSING',
       notes,
       items,
       customDate,
@@ -238,6 +238,58 @@ export async function DELETE(
     console.error('Error deleting transaction:', error);
     return NextResponse.json(
       { error: error.message || 'Gagal menghapus transaksi' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const admin = await getCurrentAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const existingTx = await prisma.transaction.findUnique({
+      where: { id },
+    });
+
+    if (!existingTx) {
+      return NextResponse.json({ error: 'Transaksi tidak ditemukan' }, { status: 404 });
+    }
+
+    const body = await req.json();
+    const { orderStatus, paymentStatus } = body;
+
+    const dataToUpdate: any = {};
+    if (orderStatus !== undefined) {
+      dataToUpdate.orderStatus = orderStatus;
+    }
+    if (paymentStatus !== undefined) {
+      dataToUpdate.paymentStatus = paymentStatus;
+    }
+
+    const updatedTx = await prisma.transaction.update({
+      where: { id },
+      data: dataToUpdate,
+    });
+
+    return NextResponse.json({
+      success: true,
+      transaction: {
+        ...updatedTx,
+        totalAmount: Number(updatedTx.totalAmount),
+      },
+    });
+  } catch (error: any) {
+    console.error('Error patching transaction status:', error);
+    return NextResponse.json(
+      { error: error.message || 'Gagal memperbarui status transaksi' },
       { status: 500 }
     );
   }

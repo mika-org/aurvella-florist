@@ -172,7 +172,7 @@ model Transaction {
   totalAmount     Decimal           @db.Decimal(12, 2) @map("total_amount")
   paymentMethod   String            @default("TRANSFER") @map("payment_method") // TRANSFER, CASH, QRIS, SHOPEE
   paymentStatus   String            @default("PAID") @map("payment_status") // PENDING, PAID, CANCELLED
-  orderStatus     String            @default("COMPLETED") @map("order_status") // PROCESSING, DELIVERING, COMPLETED, CANCELLED
+  orderStatus     String            @default("PROCESSING") @map("order_status") // PROCESSING, DELIVERING, COMPLETED, CANCELLED
   notes           String?           @db.Text
   items           TransactionItem[]
   transactionDate DateTime          @default(now()) @map("transaction_date")

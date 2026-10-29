@@ -364,10 +364,20 @@ export default async function AdminDashboardPage() {
                         className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${
                           tx.orderStatus === 'COMPLETED'
                             ? 'bg-[#E8F8EE] text-[#1E7E34]'
+                            : tx.orderStatus === 'DELIVERING'
+                            ? 'bg-[#EFF6FF] text-[#1D4ED8]'
+                            : tx.orderStatus === 'CANCELLED'
+                            ? 'bg-[#FEF2F2] text-[#DC2626]'
                             : 'bg-[#FFF9ED] text-[#8E6D14]'
                         }`}
                       >
-                        {tx.orderStatus}
+                        {tx.orderStatus === 'COMPLETED'
+                          ? 'Selesai'
+                          : tx.orderStatus === 'DELIVERING'
+                          ? 'Dikirim'
+                          : tx.orderStatus === 'CANCELLED'
+                          ? 'Dibatalkan'
+                          : 'Diproses'}
                       </span>
                     </div>
                   </div>
