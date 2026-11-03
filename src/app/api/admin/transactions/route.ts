@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
       notes,
       items,
       customDate,
+      totalAmount: inputTotalAmount,
     } = body;
 
     if (!customerName || !customerPhone) {
@@ -113,12 +114,12 @@ export async function POST(req: NextRequest) {
     const invoiceNumber = `INV-${dateStr}-${String(countToday + 1).padStart(4, '0')}`;
 
     // Calculate total
-    let totalAmount = 0;
+    let computedTotal = 0;
     const itemsData = items.map((item: any) => {
       const price = Number(item.price);
       const quantity = Math.max(1, Number(item.quantity) || 1);
-      const subtotal = price * quantity;
-      totalAmount += subtotal;
+      const subtotal = item.subtotal !== undefined ? Number(item.subtotal) : price * quantity;
+      computedTotal += subtotal;
 
       return {
         productId: item.productId || null,
@@ -129,6 +130,10 @@ export async function POST(req: NextRequest) {
         subtotal,
       };
     });
+
+    const totalAmount = inputTotalAmount !== undefined && Number(inputTotalAmount) > 0
+      ? Number(inputTotalAmount)
+      : computedTotal;
 
     const txDate = customDate ? new Date(customDate) : new Date();
 

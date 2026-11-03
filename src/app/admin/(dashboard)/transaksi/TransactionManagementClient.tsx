@@ -63,27 +63,29 @@ export interface TransactionData {
   items: TransactionItemData[];
 }
 
-interface Props {
-  initialTransactions: TransactionData[];
+export interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+  image: string;
+  sampleProductId?: string | null;
+  sampleSku: string;
+  samplePrice: number;
 }
 
-interface ProductSearchResult {
-  id: string;
-  sku: string;
-  name: string;
-  price: number;
-  promoPrice: number | null;
-  isPromo: boolean;
-  categoryName: string;
-  imageUrl: string;
+interface Props {
+  initialTransactions: TransactionData[];
+  initialCategories?: CategoryOption[];
 }
 
 export default function TransactionManagementClient({
   initialTransactions,
+  initialCategories = [],
 }: Props) {
   const router = useRouter();
   const { showToast } = useToast();
   const [transactions, setTransactions] = useState<TransactionData[]>(initialTransactions);
+  const [categories, setCategories] = useState<CategoryOption[]>(initialCategories);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
@@ -108,10 +110,11 @@ export default function TransactionManagementClient({
     new Date().toISOString().slice(0, 16)
   );
 
-  // Form Items State
+  // Form Items State (Kategori Standing Flower Terpilih)
   const [items, setItems] = useState<
     {
-      productId: string;
+      categoryId?: string;
+      productId: string | null;
       productSku: string;
       productName: string;
       price: number;
@@ -121,10 +124,30 @@ export default function TransactionManagementClient({
     }[]
   >([]);
 
-  // Product Search in Modal
-  const [searchProductQuery, setSearchProductQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<ProductSearchResult[]>([]);
-  const [isSearchingProduct, setIsSearchingProduct] = useState(false);
+  const [customPriceInput, setCustomPriceInput] = useState('');
+
+  // Fallback to fetch categories if not provided
+  React.useEffect(() => {
+    if (categories.length === 0) {
+      fetch('/api/admin/categories')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.categories) {
+            setCategories(
+              data.categories.map((c: any) => ({
+                id: c.id,
+                name: c.name,
+                slug: c.slug,
+                image: c.image || '/images/categories/standing-acrylic.png',
+                sampleSku: c.slug.toUpperCase(),
+                samplePrice: 500000,
+              }))
+            );
+          }
+        })
+        .catch(() => {});
+    }
+  }, [categories.length]);
 
   // Loading & Error states
   const [isSaving, setIsSaving] = useState(false);
@@ -240,52 +263,37 @@ export default function TransactionManagementClient({
     }
   };
 
-  // Search by Name / Live Query
-  const handleLiveSearch = async (val: string) => {
-    setSearchProductQuery(val);
-    if (val.trim().length < 2) {
-      setSearchResults([]);
-      return;
-    }
+  // Select Category Handler
+  const handleSelectCategory = (catId: string) => {
+    if (!catId) return;
+    const cat = categories.find((c) => c.id === catId);
+    if (!cat) return;
 
-    setIsSearchingProduct(true);
-    try {
-      const res = await fetch(`/api/admin/products/search?q=${encodeURIComponent(val.trim())}`);
-      const data = await res.json();
-      setSearchResults(data.products || []);
-    } catch {
-      setSearchResults([]);
-    } finally {
-      setIsSearchingProduct(false);
-    }
-  };
-
-  const addProductToItems = (p: ProductSearchResult) => {
-    const finalPrice = p.isPromo && p.promoPrice ? p.promoPrice : p.price;
-    const existingIndex = items.findIndex((it) => it.productSku === p.sku);
+    const existingIndex = items.findIndex(
+      (it) => it.categoryId === cat.id || it.productName === cat.name
+    );
 
     if (existingIndex >= 0) {
-      // Increase qty
       const updated = [...items];
       updated[existingIndex].quantity += 1;
-      updated[existingIndex].subtotal = updated[existingIndex].quantity * updated[existingIndex].price;
+      updated[existingIndex].subtotal =
+        updated[existingIndex].quantity * updated[existingIndex].price;
       setItems(updated);
     } else {
       setItems((prev) => [
         ...prev,
         {
-          productId: p.id,
-          productSku: p.sku,
-          productName: p.name,
-          price: finalPrice,
+          categoryId: cat.id,
+          productId: cat.sampleProductId || null,
+          productSku: cat.sampleSku || cat.slug.toUpperCase(),
+          productName: cat.name,
+          price: cat.samplePrice,
           quantity: 1,
-          subtotal: finalPrice,
-          imageUrl: p.imageUrl,
+          subtotal: cat.samplePrice,
+          imageUrl: cat.image,
         },
       ]);
     }
-    setSearchResults([]);
-    setSearchProductQuery('');
   };
 
   const updateItemQty = (index: number, newQty: number) => {
@@ -300,7 +308,11 @@ export default function TransactionManagementClient({
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const formGrandTotal = items.reduce((acc, it) => acc + it.subtotal, 0);
+  const defaultCatalogTotal = items.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+  const formGrandTotal =
+    customPriceInput && Number(customPriceInput) > 0
+      ? Number(customPriceInput)
+      : defaultCatalogTotal;
 
   const openCreateModal = () => {
     setEditingTxId(null);
@@ -315,8 +327,7 @@ export default function TransactionManagementClient({
     setNotes('');
     setCustomDate(new Date().toISOString().slice(0, 16));
     setItems([]);
-    setSearchProductQuery('');
-    setSearchResults([]);
+    setCustomPriceInput('');
     setErrorMsg(null);
     setIsCreateModalOpen(true);
   };
@@ -339,7 +350,7 @@ export default function TransactionManagementClient({
     );
     setItems(
       tx.items.map((it) => ({
-        productId: it.productId || '',
+        productId: it.productId || null,
         productSku: it.productSku,
         productName: it.productName,
         price: it.price,
@@ -348,8 +359,7 @@ export default function TransactionManagementClient({
         imageUrl: it.product?.images?.[0]?.url || '/images/categories/standing-acrylic.png',
       }))
     );
-    setSearchProductQuery('');
-    setSearchResults([]);
+    setCustomPriceInput(String(tx.totalAmount));
     setErrorMsg(null);
     setIsDetailModalOpen(false);
     setIsCreateModalOpen(true);
@@ -391,13 +401,37 @@ export default function TransactionManagementClient({
   const handleSaveTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) {
-      setErrorMsg('Pilih atau masukkan minimal 1 produk pesanan.');
-      showToast.warning('Pesanan Kosong', 'Pilih atau masukkan minimal 1 produk pesanan.');
+      setErrorMsg('Pilih minimal 1 kategori standing flower pesanan.');
+      showToast.warning('Kategori Belum Dipilih', 'Pilih minimal 1 kategori standing flower pesanan.');
       return;
     }
 
     setIsSaving(true);
     setErrorMsg(null);
+
+    const finalPriceTotal =
+      customPriceInput && Number(customPriceInput) > 0
+        ? Number(customPriceInput)
+        : defaultCatalogTotal;
+
+    const finalItems = items.map((it) => {
+      if (items.length === 1) {
+        const qty = Math.max(1, it.quantity);
+        return {
+          ...it,
+          price: Math.round(finalPriceTotal / qty),
+          subtotal: finalPriceTotal,
+        };
+      } else {
+        const ratio = defaultCatalogTotal > 0 ? finalPriceTotal / defaultCatalogTotal : 1;
+        const itemPrice = Math.round(it.price * ratio);
+        return {
+          ...it,
+          price: itemPrice,
+          subtotal: itemPrice * it.quantity,
+        };
+      }
+    });
 
     try {
       const payload = {
@@ -411,7 +445,8 @@ export default function TransactionManagementClient({
         orderStatus,
         notes,
         customDate,
-        items,
+        totalAmount: finalPriceTotal,
+        items: finalItems,
       };
 
       const url = editingTxId
@@ -854,8 +889,8 @@ export default function TransactionManagementClient({
                 </h2>
                 <span className="text-xs text-[#7A6D72]">
                   {editingTxId
-                    ? 'Perbarui rincian pembeli, item produk, atau rincian pesanan.'
-                    : 'Pilih produk standing flower dari katalog dan masukkan rincian pembeli.'}
+                    ? 'Perbarui rincian pembeli, kategori pesanan, atau rincian transaksi.'
+                    : 'Pilih kategori standing flower pesanan dan masukkan rincian pembeli.'}
                 </span>
               </div>
               <button
@@ -874,88 +909,92 @@ export default function TransactionManagementClient({
             )}
 
             <form onSubmit={handleSaveTransaction} className="space-y-6 text-xs">
-              {/* SECTION: PRODUCT SELECTION */}
+              {/* SECTION: CATEGORY SELECTION */}
               <div className="p-4 rounded-2xl bg-[#FFF8FA] border border-[#F8E1E7] space-y-4">
-                <span className="font-bold text-[#B83253] text-xs uppercase tracking-wider block">
-                  1. Pilih Produk Standing Flower
-                </span>
-
-                {/* Search Product */}
-                <div className="relative">
-                  <label className="block font-semibold text-[#4A3E42] mb-1">
-                    Cari Produk Standing Flower
-                  </label>
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-[#8A7E82] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Ketik nama bunga atau kata kunci standing flower..."
-                      value={searchProductQuery}
-                      onChange={(e) => handleLiveSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
-                    />
-                  </div>
-
-                  {/* Dropdown Search Results */}
-                  {searchResults.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-[#EFE4E7] max-h-52 overflow-y-auto z-20 divide-y divide-[#F5E6EA]">
-                      {searchResults.map((p) => (
-                        <div
-                          key={p.id}
-                          onClick={() => addProductToItems(p)}
-                          className="p-2.5 hover:bg-[#FFF8FA] cursor-pointer flex items-center justify-between transition-colors"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-10 h-10 rounded-lg overflow-hidden relative bg-[#FAF6F8] shrink-0 border border-[#F4E6EB]">
-                              <SkeletonImage src={p.imageUrl} alt={p.name} fill sizes="40px" className="object-cover" />
-                            </div>
-                            <div className="min-w-0">
-                              <span className="font-bold text-[#2D2527] block truncate">
-                                {p.name}
-                              </span>
-                              <span className="text-[10px] font-mono text-[#B83253]">
-                                SKU: {p.sku} • {p.categoryName}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0 ml-3">
-                            <span className="font-bold text-[#B83253] text-xs block">
-                              {formatRupiah(p.isPromo && p.promoPrice ? p.promoPrice : p.price)}
-                            </span>
-                            <span className="text-[10px] text-[#28A745] font-semibold">
-                              + Tambah
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div>
+                  <span className="font-bold text-[#B83253] text-xs uppercase tracking-wider block">
+                    1. Pilih Kategori Standing Flower
+                  </span>
+                  <span className="text-[11px] text-[#7A6D72]">
+                    Pilih kategori standing flower yang dipesan oleh pelanggan.
+                  </span>
                 </div>
 
-                {/* Selected Items List in Form */}
-                <div className="space-y-2 pt-2 border-t border-[#F5D5DE]">
-                  <span className="font-semibold text-[#4A3E42] block">
-                    Item Terpilih ({items.length} item):
+                {/* Dropdown Select & Quick Buttons */}
+                <div className="space-y-2">
+                  <label className="block font-semibold text-[#4A3E42] text-xs">
+                    Kategori Standing Flower <span className="text-[#B83253]">*</span>
+                  </label>
+                  <select
+                    value=""
+                    onChange={(e) => handleSelectCategory(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8D9DC] text-xs bg-white font-medium text-[#2D2527] focus:outline-none focus:border-[#B83253]"
+                  >
+                    <option value="">-- Klik untuk Pilih Kategori Bunga --</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Quick Select Category Badges */}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {categories.map((c) => {
+                      const isSelected = items.some(
+                        (it) => it.categoryId === c.id || it.productName === c.name
+                      );
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => handleSelectCategory(c.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-[#B83253] text-white shadow-xs scale-[1.02]'
+                              : 'bg-white border border-[#E8D9DC] text-[#4A3E42] hover:bg-[#FAF3F5] hover:border-[#B83253]'
+                          }`}
+                        >
+                          <span>{c.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Selected Category in Form */}
+                <div className="space-y-3 pt-2 border-t border-[#F5D5DE]">
+                  <span className="font-semibold text-[#4A3E42] block text-xs">
+                    Kategori Terpilih ({items.length}):
                   </span>
 
                   {items.length === 0 ? (
                     <div className="p-4 rounded-xl bg-white text-center text-[#8A7E82] border border-dashed border-[#E8D9DC]">
-                      Belum ada produk yang ditambahkan. Gunakan pencarian SKU atau nama di atas.
+                      Belum ada kategori yang dipilih. Silakan pilih kategori standing flower di atas.
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {items.map((it, idx) => (
                         <div
-                          key={it.productSku}
+                          key={it.categoryId || it.productSku || idx}
                           className="p-3 rounded-xl bg-white border border-[#E8D9DC] flex items-center justify-between gap-3 shadow-xs"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden relative bg-[#FAF6F8] shrink-0 border border-[#F4E6EB]">
+                              <SkeletonImage
+                                src={it.imageUrl || '/images/categories/standing-acrylic.png'}
+                                alt={it.productName}
+                                fill
+                                sizes="40px"
+                                className="object-cover"
+                              />
+                            </div>
                             <div className="min-w-0">
-                              <span className="font-bold text-[#2D2527] block truncate">
+                              <span className="font-bold text-[#2D2527] block truncate text-xs">
                                 {it.productName}
                               </span>
                               <span className="text-[10px] font-mono text-[#7A6D72]">
-                                SKU: {it.productSku} • {formatRupiah(it.price)} / pcs
+                                Kategori Standing Flower
                               </span>
                             </div>
                           </div>
@@ -981,14 +1020,11 @@ export default function TransactionManagementClient({
                               </button>
                             </div>
 
-                            <span className="font-bold text-[#B83253] text-xs w-24 text-right">
-                              {formatRupiah(it.subtotal)}
-                            </span>
-
                             <button
                               type="button"
                               onClick={() => removeItem(idx)}
                               className="p-1 rounded text-[#EF4444] hover:bg-[#FDEEEF]"
+                              title="Hapus kategori"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -996,9 +1032,28 @@ export default function TransactionManagementClient({
                         </div>
                       ))}
 
-                      <div className="flex justify-between items-center p-3 rounded-xl bg-[#FFF0F4] font-bold text-xs text-[#B83253]">
-                        <span>Grand Total Pesanan:</span>
-                        <span className="text-sm font-extrabold">{formatRupiah(formGrandTotal)}</span>
+                      {/* Form Input Harga Pesanan */}
+                      <div className="p-3.5 rounded-xl bg-white border border-[#E8D9DC] space-y-1.5">
+                        <label className="block font-semibold text-[#4A3E42] text-xs">
+                          Harga Pesanan (Rp)
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#7A6D72]">
+                            Rp
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder={
+                              defaultCatalogTotal > 0
+                                ? String(defaultCatalogTotal)
+                                : 'Contoh: 550000'
+                            }
+                            value={customPriceInput}
+                            onChange={(e) => setCustomPriceInput(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#E8D9DC] text-xs font-bold text-[#2D2527] bg-[#FAF8F9] focus:bg-white focus:outline-none focus:border-[#B83253]"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}

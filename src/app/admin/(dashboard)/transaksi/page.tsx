@@ -25,6 +25,28 @@ export default async function AdminTransactionsPage() {
     },
   });
 
+  const categories = await prisma.category.findMany({
+    where: { isActive: true },
+    orderBy: { order: 'asc' },
+    include: {
+      products: {
+        where: { isPublished: true },
+        select: { id: true, price: true, sku: true },
+        take: 1,
+      },
+    },
+  });
+
+  const serializedCategories = categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    image: c.image || '/images/categories/standing-acrylic.png',
+    sampleProductId: c.products[0]?.id || null,
+    sampleSku: c.products[0]?.sku || c.slug.toUpperCase(),
+    samplePrice: c.products[0] ? Number(c.products[0].price) : 500000,
+  }));
+
   const serializedTransactions = transactions.map((t) => ({
     id: t.id,
     invoiceNumber: t.invoiceNumber,
@@ -57,6 +79,9 @@ export default async function AdminTransactionsPage() {
   }));
 
   return (
-    <TransactionManagementClient initialTransactions={serializedTransactions} />
+    <TransactionManagementClient
+      initialTransactions={serializedTransactions}
+      initialCategories={serializedCategories}
+    />
   );
 }
