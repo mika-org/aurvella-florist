@@ -10,9 +10,6 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  User,
-  Phone,
-  MapPin,
   FileText,
   DollarSign,
   TrendingUp,
@@ -48,17 +45,13 @@ export interface TransactionItemData {
 export interface TransactionData {
   id: string;
   invoiceNumber: string;
-  customerName: string;
-  customerPhone: string;
-  customerAddress?: string | null;
-  boardGreeting?: string | null;
-  senderName?: string | null;
   totalAmount: number;
   paymentMethod: string;
   paymentStatus: string;
   orderStatus: string;
   notes?: string | null;
   transactionDate: string;
+  deliveryDate?: string | null;
   createdAt: string;
   items: TransactionItemData[];
 }
@@ -97,11 +90,6 @@ export default function TransactionManagementClient({
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
   // Form State
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
-  const [boardGreeting, setBoardGreeting] = useState('');
-  const [senderName, setSenderName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('TRANSFER');
   const [paymentStatus, setPaymentStatus] = useState('PAID');
   const [orderStatus, setOrderStatus] = useState('PROCESSING');
@@ -109,6 +97,7 @@ export default function TransactionManagementClient({
   const [customDate, setCustomDate] = useState(() =>
     new Date().toISOString().slice(0, 16)
   );
+  const [deliveryDate, setDeliveryDate] = useState('');
 
   // Form Items State (Kategori Standing Flower Terpilih)
   const [items, setItems] = useState<
@@ -316,16 +305,12 @@ export default function TransactionManagementClient({
 
   const openCreateModal = () => {
     setEditingTxId(null);
-    setCustomerName('');
-    setCustomerPhone('');
-    setCustomerAddress('');
-    setBoardGreeting('');
-    setSenderName('');
     setPaymentMethod('TRANSFER');
     setPaymentStatus('PAID');
     setOrderStatus('PROCESSING');
     setNotes('');
     setCustomDate(new Date().toISOString().slice(0, 16));
+    setDeliveryDate('');
     setItems([]);
     setCustomPriceInput('');
     setErrorMsg(null);
@@ -334,11 +319,6 @@ export default function TransactionManagementClient({
 
   const openEditModal = (tx: TransactionData) => {
     setEditingTxId(tx.id);
-    setCustomerName(tx.customerName);
-    setCustomerPhone(tx.customerPhone);
-    setCustomerAddress(tx.customerAddress || '');
-    setBoardGreeting(tx.boardGreeting || '');
-    setSenderName(tx.senderName || '');
     setPaymentMethod(tx.paymentMethod);
     setPaymentStatus(tx.paymentStatus);
     setOrderStatus(tx.orderStatus);
@@ -348,6 +328,7 @@ export default function TransactionManagementClient({
         ? new Date(tx.transactionDate).toISOString().slice(0, 16)
         : new Date().toISOString().slice(0, 16)
     );
+    setDeliveryDate(tx.deliveryDate ? tx.deliveryDate.slice(0, 10) : '');
     setItems(
       tx.items.map((it) => ({
         productId: it.productId || null,
@@ -368,7 +349,7 @@ export default function TransactionManagementClient({
   const handleDeleteTransaction = async (tx: TransactionData) => {
     if (
       !confirm(
-        `Yakin ingin menghapus transaksi ${tx.invoiceNumber} (${tx.customerName})?\n\nJumlah total penjualan produk terkait akan disesuaikan otomatis.`
+        `Yakin ingin menghapus transaksi ${tx.invoiceNumber}?\n\nJumlah total penjualan produk terkait akan disesuaikan otomatis.`
       )
     ) {
       return;
@@ -389,7 +370,7 @@ export default function TransactionManagementClient({
         setIsDetailModalOpen(false);
         setSelectedTx(null);
       }
-      showToast.success('Transaksi Dihapus', `Transaksi ${tx.invoiceNumber} (${tx.customerName}) telah dihapus.`);
+      showToast.success('Transaksi Dihapus', `Transaksi ${tx.invoiceNumber} telah dihapus.`);
       router.refresh();
     } catch (err: any) {
       showToast.error('Gagal Menghapus Transaksi', err.message || 'Terjadi kesalahan sistem.');
@@ -435,11 +416,7 @@ export default function TransactionManagementClient({
 
     try {
       const payload = {
-        customerName,
-        customerPhone,
-        customerAddress,
-        boardGreeting,
-        senderName,
+        deliveryDate: deliveryDate || null,
         paymentMethod,
         paymentStatus,
         orderStatus,
@@ -474,7 +451,7 @@ export default function TransactionManagementClient({
 
       showToast.persistSuccess(
         editingTxId ? 'Transaksi Diperbarui' : 'Transaksi Baru Tercatat',
-        `Transaksi untuk ${customerName} berhasil disimpan ke sistem.`
+        `Transaksi ${editingTxId ? 'berhasil diperbarui' : 'baru berhasil disimpan'} ke sistem.`
       );
 
       setIsCreateModalOpen(false);
@@ -515,14 +492,17 @@ export default function TransactionManagementClient({
     }
   };
 
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+
   // Filtered transactions
   const filtered = transactions.filter((t) => {
     const matchSearch =
       t.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
-      t.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      t.customerPhone.includes(search) ||
-      (t.boardGreeting && t.boardGreeting.toLowerCase().includes(search.toLowerCase())) ||
-      (t.senderName && t.senderName.toLowerCase().includes(search.toLowerCase())) ||
       t.items.some((it) => it.productName.toLowerCase().includes(search.toLowerCase()) || it.productSku.toLowerCase().includes(search.toLowerCase()));
 
     const matchStatus = statusFilter === 'ALL' || t.orderStatus === statusFilter;
@@ -644,7 +624,7 @@ export default function TransactionManagementClient({
           <Search className="w-4 h-4 text-[#8A7E82] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Cari No. Invoice, Nama Pembeli, WhatsApp, SKU, atau Ucapan Papan..."
+            placeholder="Cari No. Invoice, Nama Produk, atau SKU..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
@@ -672,8 +652,8 @@ export default function TransactionManagementClient({
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-[#FAF6F8] border-b border-[#EFE4E7] text-[#6B5A60] font-bold uppercase tracking-wider text-[11px]">
-                <th className="py-3.5 px-4">Invoice &amp; Tanggal</th>
-                <th className="py-3.5 px-4">Pelanggan &amp; WhatsApp</th>
+                <th className="py-3.5 px-4">Invoice</th>
+                <th className="py-3.5 px-4">Waktu Transaksi</th>
                 <th className="py-3.5 px-4">Produk Standing Flower</th>
                 <th className="py-3.5 px-4">Total Nilai</th>
                 <th className="py-3.5 px-4">Status Pesanan</th>
@@ -695,30 +675,20 @@ export default function TransactionManagementClient({
                       <span className="font-mono font-bold text-[#B83253] block">
                         {tx.invoiceNumber}
                       </span>
-                      <span className="text-[11px] text-[#7A6D72] flex items-center gap-1 mt-0.5">
-                        <Calendar className="w-3 h-3 text-[#DFB758]" />
-                        {new Date(tx.transactionDate).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </span>
                     </td>
 
-                    {/* Customer & Phone */}
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-[#2D2527] block">
-                        {tx.customerName}
+                    {/* Order & Delivery Date */}
+                    <td className="py-3 px-4 whitespace-nowrap text-[11px] text-[#4A3E42] space-y-0.5">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-[#DFB758]" />
+                        <span className="text-[#7A6D72]">Pesanan:</span>
+                        <strong>{formatDate(tx.transactionDate)}</strong>
                       </span>
-                      <a
-                        href={`https://wa.me/${tx.customerPhone.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] text-[#25D366] hover:underline flex items-center gap-1 mt-0.5"
-                      >
-                        <Phone className="w-3 h-3 fill-[#25D366]" />
-                        {tx.customerPhone}
-                      </a>
+                      <span className="flex items-center gap-1">
+                        <Truck className="w-3 h-3 text-[#0284C7]" />
+                        <span className="text-[#7A6D72]">Pengiriman:</span>
+                        <strong>{tx.deliveryDate ? formatDate(tx.deliveryDate) : '-'}</strong>
+                      </span>
                     </td>
 
                     {/* Products */}
@@ -889,8 +859,8 @@ export default function TransactionManagementClient({
                 </h2>
                 <span className="text-xs text-[#7A6D72]">
                   {editingTxId
-                    ? 'Perbarui rincian pembeli, kategori pesanan, atau rincian transaksi.'
-                    : 'Pilih kategori standing flower pesanan dan masukkan rincian pembeli.'}
+                    ? 'Perbarui kategori pesanan atau waktu transaksi.'
+                    : 'Pilih kategori standing flower pesanan dan isi waktu transaksi.'}
                 </span>
               </div>
               <button
@@ -1063,75 +1033,30 @@ export default function TransactionManagementClient({
               {/* SECTION: CUSTOMER & ORDER DETAILS */}
               <div className="space-y-4">
                 <span className="font-bold text-[#B83253] text-xs uppercase tracking-wider block">
-                  2. Informasi Pembeli &amp; Kartu Ucapan Papan
+                  2. Waktu Transaksi
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-semibold text-[#4A3E42] mb-1">
-                      Nama Pembeli <span className="text-[#B83253]">*</span>
+                      Tanggal Pesanan
                     </label>
                     <input
-                      type="text"
-                      required
-                      placeholder="Contoh: Ibu Sarah Wijaya"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
+                      type="datetime-local"
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
                     />
                   </div>
 
                   <div>
                     <label className="block font-semibold text-[#4A3E42] mb-1">
-                      Nomor WhatsApp / HP <span className="text-[#B83253]">*</span>
+                      Tanggal Pengiriman
                     </label>
                     <input
-                      type="text"
-                      required
-                      placeholder="Contoh: 081234567890"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#4A3E42] mb-1">
-                    Alamat Pengiriman (Bandung &amp; Sekitarnya)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: Gedung Graha Manggala Siliwangi, Jl. Aceh No.66, Bandung"
-                    value={customerAddress}
-                    onChange={(e) => setCustomerAddress(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-semibold text-[#4A3E42] mb-1">
-                      Tulisan di Papan Bunga (Greeting)
-                    </label>
-                    <textarea
-                      rows={2}
-                      placeholder="Contoh: 'Selamat & Sukses atas Grand Opening Resto...'"
-                      value={boardGreeting}
-                      onChange={(e) => setBoardGreeting(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-[#4A3E42] mb-1">
-                      Nama Pengirim pada Papan Bunga
-                    </label>
-                    <textarea
-                      rows={2}
-                      placeholder="Contoh: 'Direksi & Staff PT. Samudera Logistik Bandung'"
-                      value={senderName}
-                      onChange={(e) => setSenderName(e.target.value)}
+                      type="date"
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
                     />
                   </div>
@@ -1154,17 +1079,6 @@ export default function TransactionManagementClient({
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-[#4A3E42] mb-1">
-                      Tanggal &amp; Waktu Transaksi
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={customDate}
-                      onChange={(e) => setCustomDate(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
-                    />
-                  </div>
                 </div>
 
                 {editingTxId && (
@@ -1241,16 +1155,12 @@ export default function TransactionManagementClient({
             <div className="space-y-4 text-xs">
               <div className="p-3.5 rounded-xl bg-[#FFF8FA] border border-[#F8E1E7] space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-[#7A6D72]">Nama Pelanggan:</span>
-                  <span className="font-bold text-[#2D2527]">{selectedTx.customerName}</span>
+                  <span className="text-[#7A6D72]">Tanggal Pesanan:</span>
+                  <span>{formatDate(selectedTx.transactionDate)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#7A6D72]">WhatsApp:</span>
-                  <span className="font-mono text-[#25D366] font-semibold">{selectedTx.customerPhone}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#7A6D72]">Tanggal:</span>
-                  <span>{new Date(selectedTx.transactionDate).toLocaleString('id-ID')}</span>
+                  <span className="text-[#7A6D72]">Tanggal Pengiriman:</span>
+                  <span>{selectedTx.deliveryDate ? formatDate(selectedTx.deliveryDate) : '-'}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#7A6D72]">Metode Pembayaran:</span>
@@ -1355,29 +1265,6 @@ export default function TransactionManagementClient({
                   </div>
                 )}
               </div>
-
-              {selectedTx.customerAddress && (
-                <div>
-                  <span className="font-semibold text-[#7A6D72] block">Alamat Kirim:</span>
-                  <p className="text-[#2D2527] mt-0.5">{selectedTx.customerAddress}</p>
-                </div>
-              )}
-
-              {selectedTx.boardGreeting && (
-                <div className="p-3 rounded-xl bg-[#FAF6F8] border border-[#F2E4E8]">
-                  <span className="font-bold text-[#B83253] text-[11px] block uppercase">
-                    Ucapan di Papan Bunga:
-                  </span>
-                  <p className="italic text-[#2D2527] mt-1 font-serif">
-                    &ldquo;{selectedTx.boardGreeting}&rdquo;
-                  </p>
-                  {selectedTx.senderName && (
-                    <p className="text-[11px] text-[#7A6D72] mt-1.5 font-semibold">
-                      Dari: {selectedTx.senderName}
-                    </p>
-                  )}
-                </div>
-              )}
 
               {/* Items List */}
               <div className="border-t border-[#F5E6EA] pt-3">

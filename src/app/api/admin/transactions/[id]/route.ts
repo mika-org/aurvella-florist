@@ -39,6 +39,7 @@ export async function GET(
       ...transaction,
       totalAmount: Number(transaction.totalAmount),
       transactionDate: transaction.transactionDate.toISOString(),
+      deliveryDate: transaction.deliveryDate ? transaction.deliveryDate.toISOString() : null,
       createdAt: transaction.createdAt.toISOString(),
       updatedAt: transaction.updatedAt.toISOString(),
       items: transaction.items.map((item) => ({
@@ -73,11 +74,12 @@ export async function PUT(
 
     const body = await req.json();
     const {
-      customerName,
-      customerPhone,
-      customerAddress,
-      boardGreeting,
-      senderName,
+      customerName = existingTx.customerName,
+      customerPhone = existingTx.customerPhone,
+      customerAddress = existingTx.customerAddress,
+      boardGreeting = existingTx.boardGreeting,
+      senderName = existingTx.senderName,
+      deliveryDate,
       paymentMethod = 'TRANSFER',
       paymentStatus = 'PAID',
       orderStatus = existingTx.orderStatus || 'PROCESSING',
@@ -86,13 +88,6 @@ export async function PUT(
       customDate,
       totalAmount: inputTotalAmount,
     } = body;
-
-    if (!customerName || !customerPhone) {
-      return NextResponse.json(
-        { error: 'Nama pembeli dan Nomor WhatsApp/Telepon wajib diisi' },
-        { status: 400 }
-      );
-    }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -136,6 +131,12 @@ export async function PUT(
       : computedTotal;
 
     const txDate = customDate ? new Date(customDate) : existingTx.transactionDate;
+    const delivery =
+      deliveryDate === undefined
+        ? existingTx.deliveryDate
+        : deliveryDate
+        ? new Date(deliveryDate)
+        : null;
 
     // 3. Delete existing transaction items and recreate with updated data
     await prisma.transactionItem.deleteMany({
@@ -156,6 +157,7 @@ export async function PUT(
         orderStatus,
         notes: notes || null,
         transactionDate: txDate,
+        deliveryDate: delivery,
         items: {
           create: itemsData,
         },

@@ -61,6 +61,7 @@ export default async function AdminTransactionsPage() {
     orderStatus: t.orderStatus,
     notes: t.notes,
     transactionDate: t.transactionDate.toISOString(),
+    deliveryDate: t.deliveryDate ? t.deliveryDate.toISOString() : null,
     createdAt: t.createdAt.toISOString(),
     items: t.items.map((it) => ({
       id: it.id,

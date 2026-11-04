@@ -19,6 +19,7 @@ import {
   Package,
   CheckCircle2,
   Calendar,
+  Clock,
   Users,
   Phone,
   Crown,
@@ -83,6 +84,9 @@ export default async function AdminDashboardPage() {
   // Aggregate Sales KPIs
   const totalOmset = transactions.reduce((acc, t) => acc + Number(t.totalAmount), 0);
   const totalCompletedTransactions = transactions.filter((t) => t.orderStatus === 'COMPLETED').length;
+  const totalUnfinishedTransactions = transactions.filter(
+    (t) => t.orderStatus === 'PROCESSING' || t.orderStatus === 'DELIVERING'
+  ).length;
   const totalPcsSold = topSellingProducts.reduce((sum, p) => sum + p.totalSold, 0);
 
   const metrics = [
@@ -94,6 +98,14 @@ export default async function AdminDashboardPage() {
       icon: DollarSign,
       color: 'bg-[#E8F8EE] text-[#1E7E34]',
       isCurrency: true,
+    },
+    {
+      title: 'Pesanan Belum Selesai',
+      value: `${totalUnfinishedTransactions} Pesanan`,
+      subtext: 'Sedang diproses / dalam pengiriman',
+      href: '/admin/transaksi',
+      icon: Clock,
+      color: 'bg-[#FFF9ED] text-[#8E6D14]',
     },
     {
       title: 'Pesanan Selesai',
@@ -347,8 +359,11 @@ export default async function AdminDashboardPage() {
                         <span className="font-mono text-xs font-bold text-[#B83253]">
                           {tx.invoiceNumber}
                         </span>
-                        <span className="font-bold text-xs text-[#2D2527] truncate">
-                          {tx.customerName}
+                        <span className="text-[11px] text-[#7A6D72] truncate">
+                          Pesanan {new Date(tx.transactionDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {tx.deliveryDate
+                            ? ` • Kirim ${new Date(tx.deliveryDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                            : ''}
                         </span>
                       </div>
                       <p className="text-[11px] text-[#7A6D72] truncate mt-0.5">

@@ -19,12 +19,8 @@ export async function GET(req: NextRequest) {
   const BOM = '\uFEFF';
   const headers = [
     'No. Invoice',
-    'Tanggal Transaksi',
-    'Nama Pelanggan',
-    'No. WhatsApp / HP',
-    'Alamat Kirim',
-    'Ucapan Papan Bunga',
-    'Pengirim (Papan)',
+    'Tanggal Pesanan',
+    'Tanggal Pengiriman',
     'SKU Produk',
     'Nama Produk',
     'Harga Satuan (Rp)',
@@ -53,6 +49,15 @@ export async function GET(req: NextRequest) {
       minute: '2-digit',
     });
 
+    const formattedDelivery = t.deliveryDate
+      ? new Date(t.deliveryDate).toLocaleDateString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+      : '-';
+
     const txAmount = Number(t.totalAmount) || 0;
     totalGrossIncome += txAmount;
     if (t.paymentStatus === 'PAID') {
@@ -70,11 +75,7 @@ export async function GET(req: NextRequest) {
       rows.push([
         t.invoiceNumber,
         formattedDate,
-        t.customerName,
-        t.customerPhone,
-        t.customerAddress || '-',
-        t.boardGreeting || '-',
-        t.senderName || '-',
+        formattedDelivery,
         item.productSku,
         item.productName,
         String(itemPrice),
@@ -100,10 +101,6 @@ export async function GET(req: NextRequest) {
     '-',
     '-',
     '-',
-    '-',
-    '-',
-    '-',
-    '-',
     String(totalItemsQuantity),
     String(totalItemsSubtotal),
     String(totalGrossIncome),
@@ -115,7 +112,7 @@ export async function GET(req: NextRequest) {
 
   // Add Additional Summary Block
   rows.push(new Array(headers.length).fill(''));
-  rows.push(['=== RINGKASAN REKAP KEUANGAN AURVELLA FLORIST ===', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push(['=== RINGKASAN REKAP KEUANGAN AURVELLA FLORIST ===', '', '', '', '', '', '', '', '', '', '', '', '', '']);
   rows.push(['Total Transaksi', `${transactions.length} pesanan`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
   rows.push(['Total Standing Flower Terjual', `${totalItemsQuantity} pcs`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
   rows.push(['Total Omset / Pemasukan Kotor (Rp)', String(totalGrossIncome), `(Rp ${totalGrossIncome.toLocaleString('id-ID')})`, '', '', '', '', '', '', '', '', '', '', '', '', '', '']);

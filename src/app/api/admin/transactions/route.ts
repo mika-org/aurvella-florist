@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
     ...t,
     totalAmount: Number(t.totalAmount),
     transactionDate: t.transactionDate.toISOString(),
+    deliveryDate: t.deliveryDate ? t.deliveryDate.toISOString() : null,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
     items: t.items.map((item) => ({
@@ -73,11 +74,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
-      customerName,
-      customerPhone,
+      customerName = '',
+      customerPhone = '',
       customerAddress,
       boardGreeting,
       senderName,
+      deliveryDate,
       paymentMethod = 'TRANSFER',
       paymentStatus = 'PAID',
       orderStatus = 'PROCESSING',
@@ -86,13 +88,6 @@ export async function POST(req: NextRequest) {
       customDate,
       totalAmount: inputTotalAmount,
     } = body;
-
-    if (!customerName || !customerPhone) {
-      return NextResponse.json(
-        { error: 'Nama pembeli dan Nomor WhatsApp/Telepon wajib diisi' },
-        { status: 400 }
-      );
-    }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -136,17 +131,21 @@ export async function POST(req: NextRequest) {
       : computedTotal;
 
     const txDate = customDate ? new Date(customDate) : new Date();
+    const delivery = deliveryDate ? new Date(deliveryDate) : null;
 
     // Auto find or create customer
-    const cleanPhone = customerPhone.trim().replace(/[^0-9]/g, '');
-    let customer = await prisma.customer.findUnique({
-      where: { whatsapp: cleanPhone },
-    });
+    const cleanPhone = String(customerPhone).trim().replace(/[^0-9]/g, '');
+    const cleanName = String(customerName).trim();
+    let customer = cleanPhone
+      ? await prisma.customer.findUnique({ where: { whatsapp: cleanPhone } })
+      : null;
 
-    if (!customer) {
+    if (!cleanPhone) {
+      // Data pembeli tidak lagi diinput; transaksi dicatat tanpa pelanggan.
+    } else if (!customer) {
       customer = await prisma.customer.create({
         data: {
-          name: customerName.trim(),
+          name: cleanName || cleanPhone,
           whatsapp: cleanPhone,
           address: customerAddress || null,
           totalOrders: 1,
@@ -158,7 +157,7 @@ export async function POST(req: NextRequest) {
       customer = await prisma.customer.update({
         where: { id: customer.id },
         data: {
-          name: customerName.trim(),
+          name: cleanName || customer.name,
           address: customerAddress || customer.address,
           totalOrders: { increment: 1 },
           totalSpent: { increment: totalAmount },
@@ -170,8 +169,8 @@ export async function POST(req: NextRequest) {
     const newTransaction = await prisma.transaction.create({
       data: {
         invoiceNumber,
-        customerId: customer.id,
-        customerName: customerName.trim(),
+        customerId: customer?.id ?? null,
+        customerName: cleanName,
         customerPhone: cleanPhone,
         customerAddress: customerAddress || null,
         boardGreeting: boardGreeting || null,
@@ -182,6 +181,7 @@ export async function POST(req: NextRequest) {
         orderStatus,
         notes: notes || null,
         transactionDate: txDate,
+        deliveryDate: delivery,
         items: {
           create: itemsData,
         },
