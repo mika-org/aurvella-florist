@@ -97,16 +97,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate unique invoice number: INV-YYYYMMDD-XXXX
-    const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-    const countToday = await prisma.transaction.count({
-      where: {
-        transactionDate: {
-          gte: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
-        },
-      },
-    });
-    const invoiceNumber = `INV-${dateStr}-${String(countToday + 1).padStart(4, '0')}`;
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const invoicePrefix = `INV-${dateStr}-`;
+    const nextInvoiceNumber = async (skip = 0) => {
+      const last = await prisma.transaction.findFirst({
+        where: { invoiceNumber: { startsWith: invoicePrefix } },
+        orderBy: { invoiceNumber: 'desc' },
+        select: { invoiceNumber: true },
+      });
+      const lastSeq = last ? parseInt(last.invoiceNumber.slice(invoicePrefix.length), 10) || 0 : 0;
+      return `${invoicePrefix}${String(lastSeq + 1 + skip).padStart(4, '0')}`;
+    };
 
     // Calculate total
     let computedTotal = 0;
@@ -166,7 +167,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const newTransaction = await prisma.transaction.create({
+    const createTx = (invoiceNumber: string) =>
+      prisma.transaction.create({
       data: {
         invoiceNumber,
         customerId: customer?.id ?? null,
@@ -191,6 +193,17 @@ export async function POST(req: NextRequest) {
         customer: true,
       },
     });
+
+    let newTransaction;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        newTransaction = await createTx(await nextInvoiceNumber(attempt > 2 ? attempt : 0));
+        break;
+      } catch (e: any) {
+        if (e?.code === 'P2002' && attempt < 5) continue;
+        throw e;
+      }
+    }
 
     // Increment totalSold on each product
     for (const item of itemsData) {
