@@ -56,6 +56,17 @@ export default function ProductCard({
   const productUrl = `/produk/${product.slug}`;
   const waUrl = buildWhatsAppLink(whatsappNumber, product.name, product.sku);
 
+  // Include the full product link in the WhatsApp message so the admin knows
+  // which product was chosen. Built at click time from the real browser origin.
+  const handleWhatsAppClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.currentTarget.href = buildWhatsAppLink(
+      whatsappNumber,
+      product.name,
+      product.sku,
+      `${window.location.origin}${productUrl}`
+    );
+  };
+
   return (
     <motion.div
       whileHover={{ y: -5, transition: { duration: 0.25, ease: 'easeOut' } }}
@@ -165,6 +176,7 @@ export default function ProductCard({
         <motion.a
           whileTap={{ scale: 0.96 }}
           href={waUrl}
+          onClick={handleWhatsAppClick}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs font-semibold text-white bg-[#25D366] hover:bg-[#20ba59] shadow-xs transition-all cursor-pointer text-center"

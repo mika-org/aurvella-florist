@@ -256,7 +256,7 @@ export default function LinkManagementClient({ initialLinks }: Props) {
 
       {/* Modal Add/Edit */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto overscroll-contain">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#F0E4E7]">
             <div className="flex items-center justify-between pb-3 border-b border-[#F5E6EA] mb-4">
               <h2 className="font-serif text-lg font-bold text-[#2D2527]">

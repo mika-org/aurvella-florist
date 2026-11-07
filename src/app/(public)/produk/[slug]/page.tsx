@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { cache } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SkeletonImage from '@/components/ui/SkeletonImage';
 import prisma from '@/lib/prisma';
 import { buildWhatsAppLink } from '@/lib/utils';
+import { getSiteUrl } from '@/lib/site-url';
 import ProductCard from '@/components/products/ProductCard';
 import ProductDetailPricing from '@/components/products/ProductDetailPricing';
 
@@ -24,6 +25,25 @@ import {
 } from 'lucide-react';
 
 
+function safeSlug(raw: string): string {
+  try {
+    return decodeURIComponent(raw).trim().toLowerCase();
+  } catch {
+    return raw.trim().toLowerCase();
+  }
+}
+
+// Deduplicate the product query between generateMetadata and the page
+const getProduct = cache(async (slug: string) =>
+  prisma.product.findUnique({
+    where: { slug },
+    include: {
+      category: true,
+      images: { orderBy: { order: 'asc' } },
+    },
+  })
+);
+
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -31,12 +51,14 @@ interface ProductDetailPageProps {
 export async function generateMetadata({
   params,
 }: ProductDetailPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aurvellaflorist.com';
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: { category: true, images: { take: 1 } },
-  });
+  const slug = safeSlug((await params).slug);
+  const siteUrl = await getSiteUrl();
+  let product: Awaited<ReturnType<typeof getProduct>> = null;
+  try {
+    product = await getProduct(slug);
+  } catch (err) {
+    console.error('generateMetadata product lookup failed:', err);
+  }
 
   if (!product) return { title: 'Produk Tidak Ditemukan - Aurvella Florist' };
 
@@ -45,7 +67,12 @@ export async function generateMetadata({
     product.seoDescription ||
     product.description ||
     `Pesan ${product.name} (SKU: ${product.sku}) di Aurvella Florist Bandung. Spesialis standing flower no. 1 di Bandung dengan jaminan bunga segar & free ongkir.`;
-  const imageUrl = product.images[0]?.url || `${siteUrl}/images/hero-banner-2.png`;
+  const rawImage = product.images[0]?.url;
+  const imageUrl = rawImage
+    ? rawImage.startsWith('http')
+      ? rawImage
+      : `${siteUrl}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`
+    : `${siteUrl}/images/hero-banner-2.png`;
 
   return {
     title,
@@ -81,15 +108,9 @@ export async function generateMetadata({
 export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
-  const { slug } = await params;
+  const slug = safeSlug((await params).slug);
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      category: true,
-      images: { orderBy: { order: 'asc' } },
-    },
-  });
+  const product = await getProduct(slug);
 
   if (!product) notFound();
 
@@ -131,7 +152,7 @@ export default async function ProductDetailPage({
   const primaryImage =
     product.images[0]?.url || '/images/categories/standing-acrylic.png';
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aurvellaflorist.com';
+  const siteUrl = await getSiteUrl();
 
   const waLink = buildWhatsAppLink(
     whatsappNumber,

@@ -428,7 +428,7 @@ export default function CustomerManagementClient({ initialCustomers }: Props) {
 
       {/* Modal Tambah / Edit Pelanggan */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-start sm:items-center justify-center p-4 overflow-y-auto overscroll-contain">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#F0E4E7] animate-in fade-in duration-200">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#F0E4E7]">
               <h3 className="font-serif text-lg font-bold text-[#2D2527]">
