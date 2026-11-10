@@ -21,6 +21,7 @@ import {
   Receipt,
   HelpCircle,
   Users,
+  Wallet,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -93,6 +94,7 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
       items: [
         { label: 'Transaksi Penjualan', href: '/admin/transaksi', icon: Receipt },
         { label: 'Data Pelanggan', href: '/admin/pelanggan', icon: Users },
+        { label: 'Keuangan', href: '/admin/keuangan', icon: Wallet },
       ],
     },
     {

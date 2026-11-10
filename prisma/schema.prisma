@@ -217,3 +217,19 @@ model Faq {
   @@index([isActive, order])
   @@map("faqs")
 }
+
+model FinanceEntry {
+  id          String   @id @default(uuid())
+  type        String // SALES_INCOME (pemasukan penjualan), OTHER_INCOME (pemasukan lainnya), EXPENSE (pengeluaran)
+  revenue     Decimal  @default(0) @db.Decimal(14, 2) // nominal omset (SALES_INCOME)
+  cost        Decimal  @default(0) @db.Decimal(14, 2) // nominal HPP & BOP (SALES_INCOME)
+  amount      Decimal  @default(0) @db.Decimal(14, 2) // nominal pemasukan lainnya / pengeluaran
+  description String   @db.Text
+  entryDate   DateTime @default(now()) @map("entry_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([type])
+  @@index([entryDate])
+  @@map("finance_entries")
+}
