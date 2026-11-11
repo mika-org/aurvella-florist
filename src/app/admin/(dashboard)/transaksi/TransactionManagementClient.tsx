@@ -1012,15 +1012,21 @@ export default function TransactionManagementClient({
                             Rp
                           </span>
                           <input
-                            type="number"
-                            min="0"
+                            type="text"
+                            inputMode="numeric"
                             placeholder={
                               defaultCatalogTotal > 0
-                                ? String(defaultCatalogTotal)
-                                : 'Contoh: 550000'
+                                ? defaultCatalogTotal.toLocaleString('id-ID')
+                                : 'Contoh: 550.000'
                             }
-                            value={customPriceInput}
-                            onChange={(e) => setCustomPriceInput(e.target.value)}
+                            value={
+                              customPriceInput
+                                ? Number(customPriceInput).toLocaleString('id-ID')
+                                : ''
+                            }
+                            onChange={(e) =>
+                              setCustomPriceInput(e.target.value.replace(/\D/g, ''))
+                            }
                             className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#E8D9DC] text-xs font-bold text-[#2D2527] bg-[#FAF8F9] focus:bg-white focus:outline-none focus:border-[#B83253]"
                           />
                         </div>

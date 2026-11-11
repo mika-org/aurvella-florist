@@ -1639,12 +1639,13 @@ export default function ProductManagementClient({
                     Harga Normal (Rp) <span className="text-[#B83253]">*</span>
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     required
-                    min={0}
-                    step={10000}
-                    value={formData.price}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, price: Number(e.target.value) }))}
+                    value={formData.price ? Number(formData.price).toLocaleString('id-ID') : ''}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, price: Number(e.target.value.replace(/\D/g, '')) }))
+                    }
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
                   />
                 </div>
@@ -1654,12 +1655,13 @@ export default function ProductManagementClient({
                     Harga Promo (Rp)
                   </label>
                   <input
-                    type="number"
-                    min={0}
-                    step={10000}
+                    type="text"
+                    inputMode="numeric"
                     placeholder="Opsional jika ada diskon"
-                    value={formData.promoPrice}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, promoPrice: e.target.value }))}
+                    value={formData.promoPrice ? Number(formData.promoPrice).toLocaleString('id-ID') : ''}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, promoPrice: e.target.value.replace(/\D/g, '') }))
+                    }
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8D9DC] text-xs focus:outline-none focus:border-[#B83253]"
                   />
                 </div>

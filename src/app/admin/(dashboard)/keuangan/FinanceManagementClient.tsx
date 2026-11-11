@@ -263,12 +263,11 @@ export default function FinanceManagementClient({ initialEntries }: Props) {
       <div className="relative">
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#7A6D72]">Rp</span>
         <input
-          type="number"
-          min="0"
-          step="any"
+          type="text"
+          inputMode="numeric"
           required={required}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={value ? Number(value).toLocaleString('id-ID') : ''}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, ''))}
           placeholder="0"
           className={`${inputCls} pl-10 font-bold`}
         />
