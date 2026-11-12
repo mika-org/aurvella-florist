@@ -38,14 +38,15 @@ export function computeSummary(
     }
   }
 
-  const netProfit = totalOmset - totalCost + totalOtherIncome;
+  // Nett profit hanya dari penjualan; pemasukan lainnya langsung menambah saldo.
+  const netProfit = totalOmset - totalCost;
   return {
     totalOmset,
     totalCost,
     totalOtherIncome,
     netProfit,
     totalExpense,
-    balance: netProfit - totalExpense,
+    balance: netProfit + totalOtherIncome - totalExpense,
   };
 }
 

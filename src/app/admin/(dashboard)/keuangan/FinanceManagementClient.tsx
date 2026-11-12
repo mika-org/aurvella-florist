@@ -243,6 +243,7 @@ export default function FinanceManagementClient({ initialEntries }: Props) {
     { label: 'Total Omset Penjualan', value: summary.totalOmset, icon: TrendingUp, tone: 'text-[#28A745] bg-[#E8F8EE]' },
     { label: 'Total HPP & BOP', value: summary.totalCost, icon: Wallet, tone: 'text-[#8E6D14] bg-[#FFF9ED]' },
     { label: 'Total Nett Profit', value: summary.netProfit, icon: Banknote, tone: 'text-[#2563EB] bg-[#F0F5FF]' },
+    { label: 'Total Pemasukan Lainnya', value: summary.totalOtherIncome, icon: ArrowUpRight, tone: 'text-[#1D4ED8] bg-[#EFF6FF]' },
     { label: 'Total Saldo di Rekening Bisnis', value: summary.balance, icon: Wallet, tone: 'text-[#B83253] bg-[#FFF0F4]' },
     { label: 'Total Pengeluaran', value: summary.totalExpense, icon: ArrowDownRight, tone: 'text-[#DC2626] bg-[#FEF2F2]' },
   ];
@@ -309,7 +310,7 @@ export default function FinanceManagementClient({ initialEntries }: Props) {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {summaryCards.map((c) => {
           const Icon = c.icon;
           return (
