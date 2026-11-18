@@ -15,6 +15,14 @@ export function formatRupiah(amount: number | string | any): string {
   }).format(num);
 }
 
+/** Official public domain used for product links shared via WhatsApp. */
+export const PUBLIC_SITE_URL = 'https://aurvellaflorist.id';
+
+/** Absolute product detail URL, e.g. https://aurvellaflorist.id/produk/<slug> */
+export function buildProductUrl(slug: string): string {
+  return `${PUBLIC_SITE_URL}/produk/${slug}`;
+}
+
 export function buildWhatsAppLink(
   phoneNumber: string,
   productName?: string,

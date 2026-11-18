@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SkeletonImage from '@/components/ui/SkeletonImage';
 import prisma from '@/lib/prisma';
-import { buildWhatsAppLink } from '@/lib/utils';
+import { buildWhatsAppLink, buildProductUrl } from '@/lib/utils';
 import { getSiteUrl } from '@/lib/site-url';
 import ProductCard from '@/components/products/ProductCard';
 import ProductDetailPricing from '@/components/products/ProductDetailPricing';
@@ -158,7 +158,7 @@ export default async function ProductDetailPage({
     whatsappNumber,
     product.name,
     product.sku,
-    `${siteUrl}/produk/${product.slug}`
+    buildProductUrl(product.slug)
   );
 
   const jsonLdProduct = {

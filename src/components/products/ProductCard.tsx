@@ -5,7 +5,7 @@ import Link from 'next/link';
 import SkeletonImage from '@/components/ui/SkeletonImage';
 import { Phone, Eye, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { formatRupiah, buildWhatsAppLink } from '@/lib/utils';
+import { formatRupiah, buildWhatsAppLink, buildProductUrl } from '@/lib/utils';
 import PromoCountdown from '@/components/ui/PromoCountdown';
 
 export interface ProductCardData {
@@ -54,18 +54,14 @@ export default function ProductCard({
     product.images?.[0]?.url || '/images/categories/standing-acrylic.png';
 
   const productUrl = `/produk/${product.slug}`;
-  const waUrl = buildWhatsAppLink(whatsappNumber, product.name, product.sku);
-
-  // Include the full product link in the WhatsApp message so the admin knows
-  // which product was chosen. Built at click time from the real browser origin.
-  const handleWhatsAppClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.href = buildWhatsAppLink(
-      whatsappNumber,
-      product.name,
-      product.sku,
-      `${window.location.origin}${productUrl}`
-    );
-  };
+  // Include the full product link (official domain) in the WhatsApp message so
+  // the admin knows which product was chosen.
+  const waUrl = buildWhatsAppLink(
+    whatsappNumber,
+    product.name,
+    product.sku,
+    buildProductUrl(product.slug)
+  );
 
   return (
     <motion.div
@@ -176,7 +172,6 @@ export default function ProductCard({
         <motion.a
           whileTap={{ scale: 0.96 }}
           href={waUrl}
-          onClick={handleWhatsAppClick}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs font-semibold text-white bg-[#25D366] hover:bg-[#20ba59] shadow-xs transition-all cursor-pointer text-center"
