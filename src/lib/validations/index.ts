@@ -115,3 +115,47 @@ export const socialLinkSchema = z.object({
 });
 
 export const siteSettingSchema = z.record(z.string(), z.string());
+
+export const USER_ROLES = ['SUPER_ADMIN', 'ADMIN', 'STAFF'] as const;
+export type UserRole = (typeof USER_ROLES)[number];
+
+export const userCreateSchema = z.object({
+  name: z.string().trim().min(2, 'Nama lengkap minimal 2 karakter').max(100, 'Nama maksimal 100 karakter'),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, 'Username minimal 3 karakter')
+    .max(50, 'Username maksimal 50 karakter')
+    .regex(
+      /^[a-z0-9_.-]+$/,
+      'Username hanya boleh berisi huruf kecil, angka, titik (.), garis bawah (_), atau strip (-)'
+    ),
+  email: z.string().trim().toLowerCase().email('Format alamat email tidak valid'),
+  password: z.string().min(6, 'Password minimal 6 karakter'),
+  role: z.enum(USER_ROLES).default('ADMIN'),
+});
+
+export const userUpdateSchema = z.object({
+  name: z.string().trim().min(2, 'Nama lengkap minimal 2 karakter').max(100, 'Nama maksimal 100 karakter'),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, 'Username minimal 3 karakter')
+    .max(50, 'Username maksimal 50 karakter')
+    .regex(
+      /^[a-z0-9_.-]+$/,
+      'Username hanya boleh berisi huruf kecil, angka, titik (.), garis bawah (_), atau strip (-)'
+    ),
+  email: z.string().trim().toLowerCase().email('Format alamat email tidak valid'),
+  password: z
+    .string()
+    .optional()
+    .nullable()
+    .refine((val) => !val || val.length >= 6, {
+      message: 'Password baru minimal 6 karakter',
+    }),
+  role: z.enum(USER_ROLES).default('ADMIN'),
+});
+

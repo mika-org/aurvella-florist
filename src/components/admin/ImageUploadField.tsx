@@ -17,7 +17,7 @@ export default function ImageUploadField({
   value,
   onChange,
   hint,
-  placeholder = 'https://aurvella-florist.elevore.web.id/uploads/nama-gambar.png',
+  placeholder = 'https://aurvellaflorist.id/uploads/nama-gambar.png',
 }: ImageUploadFieldProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);

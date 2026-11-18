@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 
-const FALLBACK_SITE_URL = 'https://aurvella-florist.elevore.web.id';
+const FALLBACK_SITE_URL = 'https://aurvellaflorist.id';
 
 /**
  * Resolve the public origin of the site for building absolute links

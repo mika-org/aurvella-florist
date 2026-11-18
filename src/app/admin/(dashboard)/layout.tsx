@@ -18,7 +18,10 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#2D2527] flex flex-col lg:flex-row relative">
       <AdminNotificationListener />
-      <AdminSidebar adminName={admin.name || 'Administrator'} />
+      <AdminSidebar
+        adminName={admin.name || 'Administrator'}
+        adminRole={admin.role}
+      />
       <main className="lg:pl-64 flex-1 p-4 sm:p-8 min-w-0">
         <div className="max-w-7xl mx-auto">{children}</div>
       </main>

@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     // URLs
     const relativeUrl = `/uploads/${filename}`;
-    const fullUrl = `https://aurvella-florist.elevore.web.id/uploads/${filename}`;
+    const fullUrl = `https://aurvellaflorist.id/uploads/${filename}`;
 
     return NextResponse.json({
       success: true,

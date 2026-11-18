@@ -23,6 +23,7 @@ import {
   Users,
   Phone,
   Crown,
+  UserCog,
 } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
@@ -44,6 +45,7 @@ export default async function AdminDashboardPage() {
     recentTransactions,
     topCustomers,
     totalCustomers,
+    totalUsers,
   ] = await Promise.all([
     prisma.product.count(),
     prisma.category.count(),
@@ -79,6 +81,7 @@ export default async function AdminDashboardPage() {
       take: 5,
     }),
     prisma.customer.count(),
+    prisma.user.count(),
   ]);
 
   // Aggregate Sales KPIs
@@ -154,6 +157,14 @@ export default async function AdminDashboardPage() {
       href: '/admin/pelanggan',
       icon: Users,
       color: 'bg-[#F0FDF4] text-[#15803D]',
+    },
+    {
+      title: 'Manajemen User',
+      value: `${totalUsers} Akun`,
+      subtext: 'Pengelola dashboard admin',
+      href: '/admin/users',
+      icon: UserCog,
+      color: 'bg-[#FFF0F4] text-[#B83253]',
     },
   ];
 

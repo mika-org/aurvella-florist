@@ -8,7 +8,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'aurvella-florist.elevore.web.id',
+        hostname: 'aurvellaflorist.id',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.aurvellaflorist.id',
         pathname: '/**',
       },
       {

@@ -22,10 +22,12 @@ import {
   HelpCircle,
   Users,
   Wallet,
+  UserCog,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
   adminName: string;
+  adminRole?: string;
 }
 
 interface NavItem {
@@ -40,11 +42,18 @@ interface NavCategory {
   items: NavItem[];
 }
 
-export default function AdminSidebar({ adminName }: AdminSidebarProps) {
+export default function AdminSidebar({ adminName, adminRole = 'ADMIN' }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  const roleLabel =
+    adminRole === 'SUPER_ADMIN'
+      ? 'Super Admin'
+      : adminRole === 'STAFF'
+      ? 'Staff Operasional'
+      : 'Administrator';
 
   // Poll and listen for unread contact message updates
   useEffect(() => {
@@ -115,6 +124,7 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
     {
       category: 'Sistem & Tampilan',
       items: [
+        { label: 'Manajemen User', href: '/admin/users', icon: UserCog },
         { label: 'Manajemen Bio Link', href: '/admin/link', icon: Sparkles },
         { label: 'Pengaturan Website', href: '/admin/pengaturan', icon: Settings },
       ],
@@ -222,7 +232,7 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
               </span>
               <div className="flex items-center gap-1 text-[10px] text-[#DFB758]">
                 <ShieldCheck className="w-3 h-3 text-[#DFB758]" />
-                <span>Super Admin</span>
+                <span>{roleLabel}</span>
               </div>
             </div>
           </div>
